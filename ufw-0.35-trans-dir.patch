@@ -1,0 +1,87 @@
+diff -ur ufw-0.35/setup.py ufw-0.35-trans-dir/setup.py
+--- ufw-0.35/setup.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-trans-dir/setup.py	2016-10-05 05:41:52.274818305 +0200
+@@ -62,6 +62,7 @@
+             real_statedir = self.home + real_statedir
+             real_prefix = self.home + '/usr'
+         real_sharedir = os.path.join(real_prefix, 'share', 'ufw')
++        real_transdir = os.path.join(real_prefix, 'share', 'locale')
+ 
+         # Update the modules' paths
+         for fn in [ 'common.py' ]:
+@@ -98,6 +99,11 @@
+                                  "s%#SHARE_DIR#%" + real_sharedir + "%g",
+                                  f])
+ 
++                subprocess.call(["sed",
++                                 "-i",
++                                 "s%#TRANS_DIR#%" + real_transdir + "%g",
++                                 f])
++
+                 if fn == 'common.py' and 'UFW_SKIP_CHECKS' in os.environ and \
+                    os.environ['UFW_SKIP_CHECKS'] != '':
+                     print("Updating do_checks")
+@@ -144,14 +150,20 @@
+         self.copy_file('src/ufw-init-functions', init_helper_functions)
+ 
+         # Install translations
+-        transdir = real_sharedir
++        transdir = real_transdir
+         if self.root != None:
+-            transdir = self.root + real_sharedir
+-        i18ndir = os.path.join(transdir, 'messages')
+-        self.mkpath(i18ndir)
++            transdir = self.root + real_transdir
+         if len(os.listdir('locales/mo')) == 0:
+             subprocess.call(["make", "mo"])
+-        self.copy_tree('locales/mo', i18ndir)
++        mo_files = os.listdir('locales/mo')
++        for f in mo_files:
++            if f.endswith('.mo'):
++                file_full_path = os.path.join('locales/mo', f)
++                lang = f[0:len(f)-3]
++                i18ndir = os.path.join(transdir, lang, 'LC_MESSAGES')
++                dest_full_path = os.path.join(i18ndir, 'ufw.mo')
++                self.mkpath(i18ndir)
++                self.copy_file(file_full_path, dest_full_path)
+ 
+         # Install configuration files
+         confdir = real_confdir
+diff -ur ufw-0.35/src/common.py ufw-0.35-trans-dir/src/common.py
+--- ufw-0.35/src/common.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-trans-dir/src/common.py	2016-10-05 05:38:21.768710217 +0200
+@@ -23,7 +23,7 @@
+ programName = "ufw"
+ state_dir = "#STATE_PREFIX#"
+ share_dir = "#SHARE_DIR#"
+-trans_dir = share_dir
++trans_dir = "#TRANS_DIR#"
+ config_dir = "#CONFIG_PREFIX#"
+ prefix_dir = "#PREFIX#"
+ iptables_dir = "#IPTABLES_DIR#"
+diff -ur ufw-0.35/src/ufw ufw-0.35-trans-dir/src/ufw
+--- ufw-0.35/src/ufw	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-trans-dir/src/ufw	2016-10-06 02:33:22.572376754 +0200
+@@ -58,8 +58,7 @@
+ 
+ # Internationalization
+ gettext.bindtextdomain(ufw.common.programName, \
+-                       os.path.join(_findpath(ufw.common.trans_dir, rootdir),
+-                                    'messages'))
++                       _findpath(ufw.common.trans_dir, rootdir))
+ gettext.textdomain(ufw.common.programName)
+ try:
+     # BAW: I'm not sure why both this and the .install() above is here, but
+diff -ur ufw-0.35/tests/unit/support.py ufw-0.35-trans-dir/tests/unit/support.py
+--- ufw-0.35/tests/unit/support.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-trans-dir/tests/unit/support.py	2016-10-05 05:38:21.768710217 +0200
+@@ -71,7 +71,8 @@
+                             os.path.realpath(topdir), "ufw/lib/ufw")
+     ufw.common.share_dir = os.path.join(
+                             os.path.realpath(topdir), "ufw/usr/share/ufw")
+-    ufw.common.trans_dir = ufw.common.share_dir
++    ufw.common.trans_dir = os.path.join(
++                            os.path.realpath(topdir), "ufw/usr/share/locale")
+     ufw.common.prefix_dir = os.path.join(os.path.realpath(topdir), "ufw/usr")
+ 
+ 
