@@ -1,0 +1,25 @@
+diff -ur ufw-0.34~rc-add-safe-icmp-to-forward/conf/ufw.conf ufw-0.34~rc-default-enabled/conf/ufw.conf
+--- ufw-0.34~rc-add-safe-icmp-to-forward/conf/ufw.conf	2014-02-20 21:17:17.000000000 +0100
++++ ufw-0.34~rc-default-enabled/conf/ufw.conf	2014-12-08 05:19:09.000000000 +0100
+@@ -3,7 +3,7 @@
+ 
+ # Set to yes to start on boot. If setting this remotely, be sure to add a rule
+ # to allow your remote connection before starting ufw. Eg: 'ufw allow 22/tcp'
+-ENABLED=no
++ENABLED=yes
+ 
+ # Please use the 'ufw' command to set the loglevel. Eg: 'ufw logging medium'.
+ # See 'man ufw' for details.
+diff -ur ufw-0.34~rc-add-safe-icmp-to-forward/doc/ufw.8 ufw-0.34~rc-default-enabled/doc/ufw.8
+--- ufw-0.34~rc-add-safe-icmp-to-forward/doc/ufw.8	2014-12-08 05:18:18.000000000 +0100
++++ ufw-0.34~rc-default-enabled/doc/ufw.8	2014-12-08 05:22:02.000000000 +0100
+@@ -429,7 +429,8 @@
+ 
+ .SH NOTES
+ .PP
+-On installation, \fBufw\fR is disabled with a default incoming policy of deny,
++On installation, \fBufw\fR is 'enabled' (but only actually enabled on bootup if
++\fBufw.service\fR is enabled in systemd) with a default incoming policy of deny,
+ a default forward policy of deny, and a default outgoing policy of allow, with
+ stateful tracking for NEW connections for incoming and forwarded connections.
+ In addition to the above, a default ruleset is put in place that does the
