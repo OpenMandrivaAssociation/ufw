@@ -1,0 +1,17 @@
+diff -ur ufw-0.35/setup.py ufw-0.35-permissions/setup.py
+--- ufw-0.35/setup.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-permissions/setup.py	2016-12-30 21:24:20.071304390 +0100
+@@ -193,9 +193,10 @@
+ 
+         # Update the installed rules files' permissions
+         for f in [ before_rules, after_rules, before6_rules, after6_rules, \
+-                      user_rules, user6_rules, init_before_hook, \
+-                      init_after_hook ]:
+-            os.chmod(f, 0o640)
++                      user_rules, user6_rules ]:
++            os.chmod(f, 0o644)
++        for f in [ init_before_hook, init_after_hook ]:
++            os.chmod(f, 0o755)
+ 
+         # Update the installed files' paths
+         for f in [ defaults, ufwconf, before_rules, after_rules, \
