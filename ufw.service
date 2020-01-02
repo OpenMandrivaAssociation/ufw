@@ -1,0 +1,17 @@
+[Unit]
+Description=Uncomplicated firewall
+Documentation=man:ufw(8) man:ufw-framework(8) file://usr/share/doc/ufw/README
+Before=network.target
+Before=libvirtd.service
+Before=NetworkManager.service
+After=syslog.target
+Conflicts=iptables.service ip6tables.service ebtables.service firewalld.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/ufw/ufw-init start
+ExecStop=/usr/libexec/ufw/ufw-init stop
+
+[Install]
+WantedBy=basic.target
