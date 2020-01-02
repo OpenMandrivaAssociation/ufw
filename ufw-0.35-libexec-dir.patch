@@ -1,0 +1,3005 @@
+diff -ur ufw-0.35-trans-dir/doc/initscript.example ufw-0.35-libexec-dir/doc/initscript.example
+--- ufw-0.35-trans-dir/doc/initscript.example	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/doc/initscript.example	2016-10-06 02:20:02.520207987 +0200
+@@ -8,9 +8,9 @@
+ PATH="/sbin:/bin"
+ config_prefix="/etc"
+ 
+-[ -d /lib/ufw ] || exit 0
++[ -d /var/lib/ufw ] || exit 0
+ 
+-for s in "/lib/ufw/ufw-init-functions" "$config_prefix/ufw/ufw.conf" ; do
++for s in "/usr/libexec/ufw/ufw-init-functions" "$config_prefix/ufw/ufw.conf" ; do
+     if [ -s "$s" ]; then
+         . "$s"
+     else
+diff -ur ufw-0.35-trans-dir/doc/ufw-framework.8 ufw-0.35-libexec-dir/doc/ufw-framework.8
+--- ufw-0.35-trans-dir/doc/ufw-framework.8	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/doc/ufw-framework.8	2016-10-06 03:00:55.538989811 +0200
+@@ -18,7 +18,7 @@
+ parameters and configuration of IPv6. The framework consists of the following
+ files:
+ .TP
+-#STATE_PREFIX#/ufw\-init
++#LIBEXEC_DIR#/ufw\-init
+ initialization script
+ .TP
+ #CONFIG_PREFIX#/ufw/before.init
+@@ -30,7 +30,7 @@
+ #CONFIG_PREFIX#/ufw/before[6].rules
+ rules file containing rules evaluated before UI added rules
+ .TP
+-#CONFIG_PREFIX#/user[6].rules
++#STATE_PREFIX#/user[6].rules
+ rules file containing UI added rules (managed with the \fBufw\fR command)
+ .TP
+ #CONFIG_PREFIX#/ufw/after[6].rules
+@@ -47,7 +47,7 @@
+ 
+ .SH "BOOT INITIALIZATION"
+ .PP
+-\fBufw\fR is started on boot with #STATE_PREFIX#/ufw\-init. This script is a
++\fBufw\fR is started on boot with #LIBEXEC_DIR#/ufw\-init. This script is a
+ standard SysV style initscript used by the \fBufw\fR command and should not be
+ modified. The #CONFIG_PREFIX#/before.init and #CONFIG_PREFIX#/after.init
+ scripts may be used to perform any additional firewall configuration that is
+@@ -98,7 +98,7 @@
+ .PP
+ \fBufw\fR is in part a front\-end for \fBiptables\-restore\fR, with its rules
+ saved in #CONFIG_PREFIX#/ufw/before.rules, #CONFIG_PREFIX#/ufw/after.rules and
+-#CONFIG_PREFIX#/user.rules. Administrators can customize \fBbefore.rules\fR and
++#STATE_PREFIX#/user.rules. Administrators can customize \fBbefore.rules\fR and
+ \fBafter.rules\fR as desired using the standard \fBiptables\-restore\fR syntax.
+ Rules are evaluated as follows: \fBbefore.rules\fR first, \fBuser.rules\fR
+ next, and \fBafter.rules\fR last. IPv6 rules are evaluated in the same way,
+diff -ur ufw-0.35-trans-dir/doc/upstart.example ufw-0.35-libexec-dir/doc/upstart.example
+--- ufw-0.35-trans-dir/doc/upstart.example	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/doc/upstart.example	2016-10-06 02:20:02.520207987 +0200
+@@ -14,5 +14,5 @@
+ 
+ console output
+ 
+-pre-start exec /lib/ufw/ufw-init start
+-post-stop exec /lib/ufw/ufw-init stop
++pre-start exec /usr/libexec/ufw/ufw-init start
++post-stop exec /usr/libexec/ufw/ufw-init stop
+diff -ur ufw-0.35-trans-dir/README ufw-0.35-libexec-dir/README
+--- ufw-0.35-trans-dir/README	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/README	2016-10-06 02:20:02.521207993 +0200
+@@ -60,7 +60,7 @@
+ on your needs, this can be as simple as adding the following to a startup
+ script (eg rc.local for systems that use it):
+ 
+-# /lib/ufw/ufw-init start
++# /usr/libexec/ufw/ufw-init start
+ 
+ For systems that use SysV initscripts, an example script is provided in
+ doc/initscript.example. See doc/upstart.example for an Upstart example and
+@@ -74,9 +74,9 @@
+ /etc/defaults/ufw 		high level configuration
+ /etc/ufw/before[6].rules 	rules evaluated before UI added rules
+ /etc/ufw/after[6].rules 	rules evaluated after UI added rules
+-/lib/ufw/user[6].rules		UI added rules (not to be modified)
++/var/lib/ufw/user[6].rules	UI added rules (not to be modified)
+ /etc/ufw/sysctl.conf 		kernel network tunables
+-/lib/ufw/ufw-init		start script
++/usr/libexec/ufw/ufw-init	start script
+ 
+ 
+ Usage
+@@ -152,7 +152,7 @@
+ that the primary chains don't move around other non-ufw rules and chains. To
+ completely flush the built-in chains with this configuration, you can use:
+ 
+-# /lib/ufw/ufw-init flush-all
++# /usr/libexec/ufw/ufw-init flush-all
+ 
+ Alternately, ufw may also take full control of the firewall by setting
+ MANAGE_BUILTINS=yes in /etc/defaults/ufw. This will flush all the built-in
+@@ -260,7 +260,7 @@
+ 
+ Remote Management
+ -----------------
+-On /lib/ufw/ufw-init start and 'ufw enable' the chains are flushed, so
++On /usr/libexec/ufw/ufw-init start and 'ufw enable' the chains are flushed, so
+ ssh may drop. This is needed so ufw is in a consistent state. Once the ufw is
+ 'enabled' it will insert rules into the existing chains, and therefore not
+ flush the chains (but will when modifying a rule or changing the default
+@@ -303,7 +303,7 @@
+ 
+ Distributions
+ -------------
+-While it certainly ok to use /lib/ufw/ufw-init as the initscript for
++While it certainly ok to use /usr/libexec/ufw/ufw-init as the initscript for
+ ufw, this script is meant to be used by ufw itself, and therefore not
+ particularly user friendly. See doc/initscript.example for a simple
+ implementation that can be adapted to your distribution.
+diff -ur ufw-0.35-trans-dir/run_tests.sh ufw-0.35-libexec-dir/run_tests.sh
+--- ufw-0.35-trans-dir/run_tests.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/run_tests.sh	2016-10-06 02:23:03.734152394 +0200
+@@ -54,7 +54,8 @@
+ CUR=`pwd`
+ export TESTPATH="$testdir/testarea"
+ export TESTTMP="$testdir/testarea/tmp"
+-export TESTSTATE="$TESTPATH/lib/ufw"
++export TESTSTATE="$TESTPATH/var/lib/ufw"
++export TESTLIBEXEC="$TESTPATH/usr/libexec/ufw"
+ export TESTCONFIG="$TESTPATH/etc/ufw"
+ 
+ STOPONFAIL="no"
+diff -ur ufw-0.35-trans-dir/setup.py ufw-0.35-libexec-dir/setup.py
+--- ufw-0.35-trans-dir/setup.py	2016-10-05 05:41:52.274818305 +0200
++++ ufw-0.35-libexec-dir/setup.py	2016-10-06 02:59:14.668463258 +0200
+@@ -55,12 +55,13 @@
+             return
+ 
+         real_confdir = os.path.join('/etc')
+-        real_statedir = os.path.join('/lib', 'ufw')
++        real_statedir = os.path.join('/var', 'lib', 'ufw')
+         real_prefix = self.prefix
+         if self.home != None:
+             real_confdir = self.home + real_confdir
+             real_statedir = self.home + real_statedir
+             real_prefix = self.home + '/usr'
++        real_libexecdir = os.path.join(real_prefix, 'libexec', 'ufw')
+         real_sharedir = os.path.join(real_prefix, 'share', 'ufw')
+         real_transdir = os.path.join(real_prefix, 'share', 'locale')
+ 
+@@ -91,6 +92,11 @@
+ 
+                 subprocess.call(["sed",
+                                  "-i",
++                                 "s%#LIBEXEC_DIR#%" + real_libexecdir + "%g",
++                                 f])
++
++                subprocess.call(["sed",
++                                 "-i",
+                                  "s%#IPTABLES_DIR#%" + iptables_dir + "%g",
+                                  f])
+ 
+@@ -144,8 +150,18 @@
+             statedir = self.root + real_statedir
+         self.mkpath(statedir)
+ 
+-        init_helper = os.path.join(statedir, 'ufw-init')
+-        init_helper_functions = os.path.join(statedir, 'ufw-init-functions')
++        user_rules = os.path.join(statedir, 'user.rules')
++        user6_rules = os.path.join(statedir, 'user6.rules')
++        self.copy_file('conf/user.rules', user_rules)
++        self.copy_file('conf/user6.rules', user6_rules)
++
++        libexecdir = real_libexecdir
++        if self.root != None:
++            libexecdir = self.root + real_libexecdir
++        self.mkpath(libexecdir)
++
++        init_helper = os.path.join(libexecdir, 'ufw-init')
++        init_helper_functions = os.path.join(libexecdir, 'ufw-init-functions')
+         self.copy_file('src/ufw-init', init_helper)
+         self.copy_file('src/ufw-init-functions', init_helper_functions)
+ 
+@@ -177,8 +193,6 @@
+         after_rules = os.path.join(confdir, 'ufw', 'after.rules')
+         before6_rules = os.path.join(confdir, 'ufw', 'before6.rules')
+         after6_rules = os.path.join(confdir, 'ufw', 'after6.rules')
+-        user_rules = os.path.join(confdir, 'ufw', 'user.rules')
+-        user6_rules = os.path.join(confdir, 'ufw', 'user6.rules')
+ 
+         apps_dir = os.path.join(confdir, 'ufw', 'applications.d')
+         init_before_hook = os.path.join(confdir, 'ufw', 'before.init')
+@@ -198,8 +212,6 @@
+         self.copy_file('conf/after.rules', after_rules)
+         self.copy_file('conf/before6.rules', before6_rules)
+         self.copy_file('conf/after6.rules', after6_rules)
+-        self.copy_file('conf/user.rules', user_rules)
+-        self.copy_file('conf/user6.rules', user6_rules)
+         self.copy_file('src/before.init', init_before_hook)
+         self.copy_file('src/after.init', init_after_hook)
+ 
+@@ -232,6 +244,11 @@
+                              f])
+ 
+             subprocess.call(["sed",
++                             "-i",
++                             "s%#LIBEXEC_DIR#%" + real_libexecdir + "%g",
++                             f])
++
++            subprocess.call(["sed",
+                              "-i",
+                              "s%#VERSION#%" + ufw_version + "%g",
+                              f])
+diff -ur ufw-0.35-trans-dir/src/backend_iptables.py ufw-0.35-libexec-dir/src/backend_iptables.py
+--- ufw-0.35-trans-dir/src/backend_iptables.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/src/backend_iptables.py	2016-10-06 02:42:22.028183783 +0200
+@@ -39,13 +39,13 @@
+         config_dir = _findpath(ufw.common.config_dir, datadir)
+         state_dir = _findpath(ufw.common.state_dir, datadir)
+ 
+-        files['rules'] = os.path.join(config_dir, 'ufw/user.rules')
++        files['rules'] = os.path.join(state_dir, 'user.rules')
+         files['before_rules'] = os.path.join(config_dir, 'ufw/before.rules')
+         files['after_rules'] = os.path.join(config_dir, 'ufw/after.rules')
+-        files['rules6'] = os.path.join(config_dir, 'ufw/user6.rules')
++        files['rules6'] = os.path.join(state_dir, 'user6.rules')
+         files['before6_rules'] = os.path.join(config_dir, 'ufw/before6.rules')
+         files['after6_rules'] = os.path.join(config_dir, 'ufw/after6.rules')
+-        files['init'] = os.path.join(_findpath(state_dir, rootdir), 'ufw-init')
++        files['init'] = os.path.join(_findpath(ufw.common.libexec_dir, rootdir), 'ufw-init')
+ 
+         ufw.backend.UFWBackend.__init__(self, "iptables", dryrun, files,
+                                         rootdir=rootdir, datadir=datadir)
+diff -ur ufw-0.35-trans-dir/src/common.py ufw-0.35-libexec-dir/src/common.py
+--- ufw-0.35-trans-dir/src/common.py	2016-10-05 05:38:21.768710217 +0200
++++ ufw-0.35-libexec-dir/src/common.py	2016-10-06 02:20:02.525208014 +0200
+@@ -22,6 +22,7 @@
+ 
+ programName = "ufw"
+ state_dir = "#STATE_PREFIX#"
++libexec_dir = "#LIBEXEC_DIR#"
+ share_dir = "#SHARE_DIR#"
+ trans_dir = "#TRANS_DIR#"
+ config_dir = "#CONFIG_PREFIX#"
+diff -ur ufw-0.35-trans-dir/src/ufw-init ufw-0.35-libexec-dir/src/ufw-init
+--- ufw-0.35-trans-dir/src/ufw-init	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/src/ufw-init	2016-10-06 02:44:51.417961124 +0200
+@@ -31,10 +31,10 @@
+ fi
+ export DATA_DIR="$datadir"
+ 
+-if [ -s "${rootdir}#STATE_PREFIX#/ufw-init-functions" ]; then
+-    . "${rootdir}#STATE_PREFIX#/ufw-init-functions"
++if [ -s "${rootdir}#LIBEXEC_DIR#/ufw-init-functions" ]; then
++    . "${rootdir}#LIBEXEC_DIR#/ufw-init-functions"
+ else
+-    echo "Could not find ${rootdir}#STATE_PREFIX#/ufw-init-functions (aborting)"
++    echo "Could not find ${rootdir}#LIBEXEC_DIR#/ufw-init-functions (aborting)"
+     exit 1
+ fi
+ 
+@@ -83,7 +83,7 @@
+     fi
+     ;;
+ *)
+-    echo "Usage: #STATE_PREFIX#/ufw-init {start|stop|restart|force-reload|force-stop|flush-all|status}"
++    echo "Usage: #LIBEXEC_DIR#/ufw-init {start|stop|restart|force-reload|force-stop|flush-all|status}"
+     exit 1
+     ;;
+ esac
+diff -ur ufw-0.35-trans-dir/src/ufw-init-functions ufw-0.35-libexec-dir/src/ufw-init-functions
+--- ufw-0.35-trans-dir/src/ufw-init-functions 2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/src/ufw-init-functions 2016-11-01 05:40:47.338866548 +0100
+@@ -30,7 +30,7 @@
+ done
+ 
+ RULES_PATH="${DATA_DIR}#CONFIG_PREFIX#/ufw"
+-USER_PATH="${DATA_DIR}#CONFIG_PREFIX#/ufw"
++USER_PATH="${DATA_DIR}#STATE_PREFIX#"
+ 
+ flush_builtins() {
+     error=""
+diff -ur ufw-0.35-trans-dir/tests/bugs/apps/runtest.sh ufw-0.35-libexec-dir/tests/bugs/apps/runtest.sh
+--- ufw-0.35-trans-dir/tests/bugs/apps/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/bugs/apps/runtest.sh	2016-10-06 02:56:46.959692205 +0200
+@@ -19,8 +19,8 @@
+ echo "Bug (Samba IPV4 tuple text wrong when IPV6 is enabled" >> $TESTTMP/result
+ sed -i 's/IPV6=.*/IPV6=yes/' $TESTPATH/etc/default/ufw
+ do_cmd "0" allow in on eth1 to any app Samba
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" null delete allow in on eth1 to any app Samba
+ sed -i 's/IPV6=.*/IPV6=no/' $TESTPATH/etc/default/ufw
+ 
+@@ -32,24 +32,24 @@
+ do_cmd "0" allow in on eth1
+ do_cmd "0" allow in on eth2
+ do_cmd "0" insert 8 deny to any app Bind9
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep "^-A .*user-input" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" delete deny to any app Bind9
+ do_cmd "0" insert 8 deny to any app Samba
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep "^-A .*user-input" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ # this insert should look the same as the above
+ do_cmd "0" delete deny to any app Samba
+ do_cmd "0" insert 5 deny to any app Bind9
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep "^-A .*user-input" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" delete deny to any app Bind9
+ do_cmd "0" insert 5 deny to any app Samba
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep "^-A .*user-input" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" delete allow in on eth0
+ do_cmd "0" delete allow to 192.168.0.2
+@@ -57,8 +57,8 @@
+ do_cmd "0" delete allow in on eth1
+ do_cmd "0" delete allow in on eth2
+ do_cmd "0" delete deny to any app Samba
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep "^-A .*user-input" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user6.rules >> $TESTTMP/result
+ sed -i 's/IPV6=.*/IPV6=no/' $TESTPATH/etc/default/ufw
+ 
+ echo "Bug #407810" >> $TESTTMP/result
+@@ -66,9 +66,9 @@
+ sed -i 's/Samba/bug407810/' "$TESTPATH/etc/ufw/applications.d/bug407810"
+ do_cmd "0" app info bug407810
+ do_cmd "0" null allow bug407810
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
+ rm -f "$TESTPATH/etc/ufw/applications.d/bug407810"
+ do_cmd "0" null delete allow bug407810
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ exit 0
+diff -ur ufw-0.35-trans-dir/tests/bugs/misc/runtest.sh ufw-0.35-libexec-dir/tests/bugs/misc/runtest.sh
+--- ufw-0.35-trans-dir/tests/bugs/misc/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/bugs/misc/runtest.sh	2016-10-06 02:47:38.338829688 +0200
+@@ -39,14 +39,14 @@
+     expected="0"
+ fi
+ sed -i 's/IPV6=.*/IPV6=no/' $TESTPATH/etc/default/ufw
+-chmod 444 $TESTCONFIG/user.rules
++chmod 444 $TESTSTATE/user.rules
+ do_cmd "$expected" null allow 12345
+-chmod 644 $TESTCONFIG/user.rules
++chmod 644 $TESTSTATE/user.rules
+ 
+ sed -i 's/IPV6=.*/IPV6=yes/' $TESTPATH/etc/default/ufw
+-chmod 444 $TESTCONFIG/user6.rules
++chmod 444 $TESTSTATE/user6.rules
+ do_cmd "$expected" null allow 12345
+-chmod 644 $TESTCONFIG/user6.rules
++chmod 644 $TESTSTATE/user6.rules
+ sed -i 's/IPV6=.*/IPV6=no/' $TESTPATH/etc/default/ufw
+ 
+ chmod 444 $TESTPATH/etc/default/ufw
+@@ -68,7 +68,7 @@
+     do_cmd "0" nostats allow 22
+     for j in user.rules user6.rules ; do
+         echo "checking for 'INVALID -j RETURN' in $j" >> $TESTTMP/result
+-        grep -q 'logging-deny .* INVALID -j RETURN' $TESTCONFIG/$j
++        grep -q 'logging-deny .* INVALID -j RETURN' $TESTSTATE/$j
+         rc="$?"
+         if [ "$rc" != "$e" ]; then
+             echo "$i: got '$rc', expected '$e'"
+@@ -86,7 +86,7 @@
+     if [ "$i" = "off" ]; then
+         e="1"
+     fi
+-    grep -q 'UFW LIMIT BLOCK' $TESTCONFIG/user.rules
++    grep -q 'UFW LIMIT BLOCK' $TESTSTATE/user.rules
+     rc="$?"
+     if [ "$rc" != "$e" ]; then
+         echo "$i: got '$rc', expected '$e'"
+diff -ur ufw-0.35-trans-dir/tests/good/apps/runtest.sh ufw-0.35-libexec-dir/tests/good/apps/runtest.sh
+--- ufw-0.35-trans-dir/tests/good/apps/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/good/apps/runtest.sh	2016-10-06 02:55:50.858399351 +0200
+@@ -123,13 +123,13 @@
+ do_cmd "0" null allow Bind9
+ do_cmd "0" null insert 1 allow Samba
+ do_cmd "0" null insert 2 reject 'Dovecot POP3'
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null delete allow Apache
+ do_cmd "0" null delete allow Bind9
+ do_cmd "0" null delete allow Samba
+ do_cmd "0" null delete reject 'Dovecot POP3'
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null allow Samba
+ do_cmd "0" null allow 22
+@@ -138,7 +138,7 @@
+ do_cmd "0" null insert 2 allow from 192.168.0.1 to any app Samba
+ do_cmd "0" null insert 2 allow from 192.168.0.1 app Samba to 10.0.0.1
+ do_cmd "0" null insert 2 allow from any app Samba to 10.0.0.1
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null delete allow Samba
+ do_cmd "0" null delete allow 22
+@@ -147,7 +147,7 @@
+ do_cmd "0" null delete allow from 192.168.0.1 to any app Samba
+ do_cmd "0" null delete allow from 192.168.0.1 app Samba to 10.0.0.1
+ do_cmd "0" null delete allow from any app Samba to 10.0.0.1
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "TESTING APPLICATION INTEGRATION (interfaces)" >> $TESTTMP/result
+ for i in "in" "out" ; do
+@@ -155,22 +155,22 @@
+         do_cmd "0" null $j $i on eth0 to 192.168.0.1 app Samba
+         do_cmd "0" null $j $i on eth0 from 10.0.0.1 app Samba
+         do_cmd "0" null $j $i on eth0 from 10.0.0.1 to any app Samba
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+         do_cmd "0" null delete $j $i on eth0 to 192.168.0.1 app Samba
+         do_cmd "0" null delete $j $i on eth0 from 10.0.0.1 app Samba
+         do_cmd "0" null delete $j $i on eth0 from 10.0.0.1 to any app Samba
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
+     done
+     do_cmd "0" null allow $i on eth0 to any app Samba
+     do_cmd "0" null allow $i on eth1 to any port 22
+     do_cmd "0" null insert 2 allow $i on eth2 to any app Samba
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+     do_cmd "0" null delete allow $i on eth0 to any app Samba
+     do_cmd "0" null delete allow $i on eth1 to any port 22
+     do_cmd "0" null delete allow $i on eth2 to any app Samba
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
+ done
+ 
+ echo "TESTING SHIPPED APPLICATION PROFILES" >> $TESTTMP/result
+diff -ur ufw-0.35-trans-dir/tests/good/logging/runtest.sh ufw-0.35-libexec-dir/tests/good/logging/runtest.sh
+--- ufw-0.35-trans-dir/tests/good/logging/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/good/logging/runtest.sh	2016-10-06 02:56:32.145614874 +0200
+@@ -43,8 +43,8 @@
+         do_cmd "0" null $i $j from 192.168.0.1 app Samba to 10.0.0.1 app Samba
+ 
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         # now delete the rules
+         do_cmd "0" null delete $i $j 23
+@@ -57,8 +57,8 @@
+         do_cmd "0" null delete $i $j from 192.168.0.1 app Samba to 10.0.0.1 app Samba
+ 
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+ done
+ 
+@@ -66,20 +66,20 @@
+ do_cmd "0" null allow log Samba
+ do_cmd "0" null deny log-all from 192.168.0.1 to 10.0.0.1 port 23 proto tcp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null limit log Samba
+ do_cmd "0" null reject log-all from 192.168.0.1 to 10.0.0.1 port 23 proto tcp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null delete limit log Samba
+ do_cmd "0" null delete reject log-all from 192.168.0.1 to 10.0.0.1 port 23 proto tcp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "TESTING LOG RULES (interfaces)" >> $TESTTMP/result
+ do_cmd "0" null allow in on eth0 log
+@@ -89,8 +89,8 @@
+ do_cmd "0" null allow out on eth0 log from 192.168.0.1 to 10.0.0.1 port 24 proto tcp
+ do_cmd "0" null deny out on eth0 log-all from 192.168.0.1 to 10.0.0.1 port 25 proto tcp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" null delete allow in on eth0 log
+ do_cmd "0" null delete allow in on eth0 log from 192.168.0.1 to 10.0.0.1 port 24 proto tcp
+ do_cmd "0" null delete deny in on eth0 log-all from 192.168.0.1 to 10.0.0.1 port 25 proto tcp
+diff -ur ufw-0.35-trans-dir/tests/good/route/runtest.sh ufw-0.35-libexec-dir/tests/good/route/runtest.sh
+--- ufw-0.35-trans-dir/tests/good/route/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/good/route/runtest.sh	2016-10-06 02:56:02.434459780 +0200
+@@ -87,14 +87,14 @@
+ do_cmd "0" null route insert 1 allow 9999
+ do_cmd "0" null route insert 1 allow log 9998
+ do_cmd "0" null route insert 2 reject to 192.168.0.1 from 10.0.0.1
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null route delete allow 22
+ do_cmd "0" null route delete allow 23
+ do_cmd "0" null route delete allow 9999
+ do_cmd "0" null route delete allow log 9998
+ do_cmd "0" null route delete reject to 192.168.0.1 from 10.0.0.1
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "ipv6 protocols" >> $TESTTMP/result
+ do_cmd "0" --dry-run route allow in on $in_if to 10.0.0.1 proto ipv6
+diff -ur ufw-0.35-trans-dir/tests/good/rules/runtest.sh ufw-0.35-libexec-dir/tests/good/rules/runtest.sh
+--- ufw-0.35-trans-dir/tests/good/rules/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/good/rules/runtest.sh	2016-10-06 02:56:16.863535101 +0200
+@@ -234,14 +234,14 @@
+ do_cmd "0" null insert 1 allow 9999
+ do_cmd "0" null insert 1 allow log 9998
+ do_cmd "0" null insert 2 reject to 192.168.0.1 from 10.0.0.1
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null delete allow 22
+ do_cmd "0" null delete allow 23
+ do_cmd "0" null delete allow 9999
+ do_cmd "0" null delete allow log 9998
+ do_cmd "0" null delete reject to 192.168.0.1 from 10.0.0.1
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "Man page (interface)" >> $TESTTMP/result
+ do_cmd "0" null --dry-run allow in on eth0 to any port 80 proto tcp
+@@ -262,7 +262,7 @@
+         do_cmd "0" null $j $i on eth0 to 192.168.0.1 port 22 from 10.0.0.1 proto udp
+         do_cmd "0" null $j $i on eth0 to 192.168.0.1 from 10.0.0.1 port 80 proto udp
+         do_cmd "0" null $j $i on eth0 to 192.168.0.1 port 22 from 10.0.0.1 port 80 proto udp
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+         do_cmd "0" null delete $j $i on eth0
+         do_cmd "0" null delete $j $i on eth0 to 192.168.0.1 port 22
+@@ -277,13 +277,13 @@
+         do_cmd "0" null delete $j $i on eth0 to 192.168.0.1 port 22 from 10.0.0.1 proto udp
+         do_cmd "0" null delete $j $i on eth0 to 192.168.0.1 from 10.0.0.1 port 80 proto udp
+         do_cmd "0" null delete $j $i on eth0 to 192.168.0.1 port 22 from 10.0.0.1 port 80 proto udp
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
+     done
+     do_cmd "0" null allow $i on eth0
+     do_cmd "0" null deny $i on eth0
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
+     do_cmd "0" null delete deny $i on eth0
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
+ done
+ 
+ echo "Man page (ipv6)" >> $TESTTMP/result
+@@ -306,6 +306,6 @@
+ do_cmd "0" delete deny out log-all to any port 53 from any proto udp comment \'dns\ port\'
+ # delete without comment
+ do_cmd "0" delete allow 2222/tcp
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ exit 0
+diff -ur ufw-0.35-trans-dir/tests/ipv6/logging/runtest.sh ufw-0.35-libexec-dir/tests/ipv6/logging/runtest.sh
+--- ufw-0.35-trans-dir/tests/ipv6/logging/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/ipv6/logging/runtest.sh	2016-10-06 02:55:39.389339482 +0200
+@@ -27,24 +27,24 @@
+         do_cmd "0" null $i $j 23
+         do_cmd "0" null $i $j Samba
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         do_cmd "0" null delete $i $j 23
+         do_cmd "0" null delete $i $j Samba
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         do_cmd "0" null $i $j from $from to $to port smtp
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         do_cmd "0" null delete $i $j from $from to $to port smtp
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+ done
+ 
+@@ -52,20 +52,20 @@
+ do_cmd "0" null allow log Samba
+ do_cmd "0" null deny log-all from $from to $to port smtp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null deny log Samba
+ do_cmd "0" null reject log-all from $from to $to port smtp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null delete deny log Samba
+ do_cmd "0" null delete reject log-all from $from to $to port smtp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "TESTING LOG RULES (interfaces)" >> $TESTTMP/result
+ do_cmd "0" null allow in on eth0 log
+@@ -75,8 +75,8 @@
+ do_cmd "0" null allow out on eth0 log from $from to $to port 24 proto tcp
+ do_cmd "0" null deny  out on eth0 log-all from $from to $to port 25 proto tcp
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 
+ exit 0
+diff -ur ufw-0.35-trans-dir/tests/ipv6/rules6/runtest.sh ufw-0.35-libexec-dir/tests/ipv6/rules6/runtest.sh
+--- ufw-0.35-trans-dir/tests/ipv6/rules6/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/ipv6/rules6/runtest.sh	2016-10-06 02:55:26.419271777 +0200
+@@ -119,7 +119,7 @@
+ echo "Comments" >> $TESTTMP/result || exit 1
+ do_cmd "0" allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto ah comment \'SSH\ port\'
+ do_cmd "0" delete allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto ah comment \'SSH\ port\'
+-cat $TESTCONFIG/user.rules $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 
+ exit 0
+diff -ur ufw-0.35-trans-dir/tests/ipv6/rules64/runtest.sh ufw-0.35-libexec-dir/tests/ipv6/rules64/runtest.sh
+--- ufw-0.35-trans-dir/tests/ipv6/rules64/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/ipv6/rules64/runtest.sh	2016-10-06 02:55:12.934201384 +0200
+@@ -145,14 +145,14 @@
+ 
+ echo "ipv4 rule in ipv4 section" >> $TESTTMP/result
+ do_cmd "0" null insert 2 allow to 127.0.0.1 port 8888
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "ipv6 rule in ipv6 section" >> $TESTTMP/result
+ do_cmd "0" null delete allow to 127.0.0.1 port 8888
+ do_cmd "0" null insert 4 allow to ::1 port 8888
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "ipv6 rule in ipv4 section" >> $TESTTMP/result
+ do_cmd "0" null delete allow to ::1 port 8888
+@@ -165,22 +165,22 @@
+ echo "'both' rule in ipv4 section" >> $TESTTMP/result
+ do_cmd "0" null delete allow to 127.0.0.1 port 8888
+ do_cmd "0" null insert 2 allow 8888
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "'both' rule in ipv6 section" >> $TESTTMP/result
+ do_cmd "0" null delete allow 8888
+ do_cmd "0" null insert 4 allow log 8888
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" null delete allow to 127.0.0.1 port 22
+ do_cmd "0" null delete allow to 127.0.0.1 port 23
+ do_cmd "0" null delete allow to ::1 port 24
+ do_cmd "0" null delete allow to ::1 port 25
+ do_cmd "0" null delete allow log 8888
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "Interfaces" >> $TESTTMP/result
+ for i in "in" "out" ; do
+@@ -189,15 +189,15 @@
+     do_cmd "0" null deny $i on eth0 from 192.168.0.1 port 22 proto tcp
+     do_cmd "0" null reject $i on eth0 to 2001:db8:85a3:8d3:1319:8a2e:370:734
+     do_cmd "0" null allow $i on eth0 from 2001:db8:85a3:8d3:1319:8a2e:370:734 port 22 proto tcp
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-    cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user6.rules >> $TESTTMP/result
+     do_cmd "0" null delete allow $i on eth0
+     do_cmd "0" null delete allow $i on eth0 to 192.168.0.1
+     do_cmd "0" null delete deny $i on eth0 from 192.168.0.1 port 22 proto tcp
+     do_cmd "0" null delete reject $i on eth0 to 2001:db8:85a3:8d3:1319:8a2e:370:734
+     do_cmd "0" null delete allow $i on eth0 from 2001:db8:85a3:8d3:1319:8a2e:370:734 port 22 proto tcp
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-    cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ echo "IPSec" >> $TESTTMP/result
+@@ -217,6 +217,6 @@
+ do_cmd "0" allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto ah comment \'SSH\ port\'
+ do_cmd "0" delete allow to 10.0.0.1 from 10.4.0.0/16 comment \'SSH\ port\'
+ do_cmd "0" delete allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto ah comment \'SSH\ port\'
+-cat $TESTCONFIG/user.rules $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ exit 0
+diff -ur ufw-0.35-trans-dir/tests/root/bugs/result ufw-0.35-libexec-dir/tests/root/bugs/result
+--- ufw-0.35-trans-dir/tests/root/bugs/result	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/bugs/result	2016-10-06 02:20:02.527208024 +0200
+@@ -59,11 +59,11 @@
+ 4: disable
+ 
+ 
+-/lib/ufw/ufw-init flush-all:
++/usr/libexec/ufw/ufw-init flush-all:
+ 5: enable
+ 
+ 
+-/lib/ufw/ufw-init force-reload:
++/usr/libexec/ufw/ufw-init force-reload:
+ ip6tables -L -n:
+ Chain INPUT (policy DROP)
+ target     prot opt source               destination         
+@@ -400,10 +400,10 @@
+ 60: enable
+ 
+ 
+-61: tests/testarea/lib/ufw/ufw-init stop
++61: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-62: tests/testarea/lib/ufw/ufw-init start
++62: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 63: disable
+@@ -415,10 +415,10 @@
+ 65: enable
+ 
+ 
+-66: tests/testarea/lib/ufw/ufw-init stop
++66: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-67: tests/testarea/lib/ufw/ufw-init start
++67: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 68: disable
+@@ -430,10 +430,10 @@
+ 70: enable
+ 
+ 
+-71: tests/testarea/lib/ufw/ufw-init stop
++71: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-72: tests/testarea/lib/ufw/ufw-init start
++72: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 73: disable
+@@ -445,10 +445,10 @@
+ 75: enable
+ 
+ 
+-76: tests/testarea/lib/ufw/ufw-init stop
++76: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-77: tests/testarea/lib/ufw/ufw-init start
++77: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 78: disable
+@@ -460,10 +460,10 @@
+ 80: enable
+ 
+ 
+-81: tests/testarea/lib/ufw/ufw-init stop
++81: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-82: tests/testarea/lib/ufw/ufw-init start
++82: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 83: disable
+@@ -475,10 +475,10 @@
+ 85: enable
+ 
+ 
+-86: tests/testarea/lib/ufw/ufw-init stop
++86: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-87: tests/testarea/lib/ufw/ufw-init start
++87: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 88: disable
+@@ -490,10 +490,10 @@
+ 90: enable
+ 
+ 
+-91: tests/testarea/lib/ufw/ufw-init stop
++91: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-92: tests/testarea/lib/ufw/ufw-init start
++92: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ Setting IPV6 to no
+@@ -503,10 +503,10 @@
+ 94: enable
+ 
+ 
+-95: tests/testarea/lib/ufw/ufw-init stop
++95: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-96: tests/testarea/lib/ufw/ufw-init start
++96: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 97: disable
+@@ -518,10 +518,10 @@
+ 99: enable
+ 
+ 
+-100: tests/testarea/lib/ufw/ufw-init stop
++100: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-101: tests/testarea/lib/ufw/ufw-init start
++101: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 102: disable
+@@ -533,10 +533,10 @@
+ 104: enable
+ 
+ 
+-105: tests/testarea/lib/ufw/ufw-init stop
++105: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-106: tests/testarea/lib/ufw/ufw-init start
++106: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 107: disable
+@@ -548,10 +548,10 @@
+ 109: enable
+ 
+ 
+-110: tests/testarea/lib/ufw/ufw-init stop
++110: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-111: tests/testarea/lib/ufw/ufw-init start
++111: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 112: disable
+@@ -563,10 +563,10 @@
+ 114: enable
+ 
+ 
+-115: tests/testarea/lib/ufw/ufw-init stop
++115: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-116: tests/testarea/lib/ufw/ufw-init start
++116: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 117: disable
+@@ -578,10 +578,10 @@
+ 119: enable
+ 
+ 
+-120: tests/testarea/lib/ufw/ufw-init stop
++120: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-121: tests/testarea/lib/ufw/ufw-init start
++121: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 122: disable
+@@ -593,10 +593,10 @@
+ 124: enable
+ 
+ 
+-125: tests/testarea/lib/ufw/ufw-init stop
++125: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-126: tests/testarea/lib/ufw/ufw-init start
++126: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ Bug #512131
+diff -ur ufw-0.35-trans-dir/tests/root/bugs/runtest.sh ufw-0.35-libexec-dir/tests/root/bugs/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/bugs/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/bugs/runtest.sh	2016-10-06 02:49:32.918426472 +0200
+@@ -22,21 +22,21 @@
+ 
+ echo "Bug #247352" >> $TESTTMP/result
+ do_cmd "0" --dry-run allow http/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ echo "iptables -L -n:" >> $TESTTMP/result
+ iptables -L -n | grep -A2 "80" >> $TESTTMP/result 2>&1
+ do_cmd "0" delete allow http/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "Bug #251355" >> $TESTTMP/result
+ echo "Setting IPV6 to no" >> $TESTTMP/result
+ sed -i "s/IPV6=.*/IPV6=no/" $TESTPATH/etc/default/ufw
+ do_cmd "0" nostats disable
+-echo "/lib/ufw/ufw-init flush-all:" >> $TESTTMP/result
+-$TESTSTATE/ufw-init flush-all >> $TESTTMP/result 2>&1
++echo "/usr/libexec/ufw/ufw-init flush-all:" >> $TESTTMP/result
++$TESTLIBEXEC/ufw-init flush-all >> $TESTTMP/result 2>&1
+ do_cmd "0" nostats enable
+-echo "/lib/ufw/ufw-init force-reload:" >> $TESTTMP/result
+-$TESTSTATE/ufw-init force-reload >> $TESTTMP/result 2>&1
++echo "/usr/libexec/ufw/ufw-init force-reload:" >> $TESTTMP/result
++$TESTLIBEXEC/ufw-init force-reload >> $TESTTMP/result 2>&1
+ echo "ip6tables -L -n:" >> $TESTTMP/result
+ ip6tables -L -n >> $TESTTMP/result 2>&1
+ 
+@@ -123,10 +123,10 @@
+ sed -i 's/Samba/bug407810/' "$TESTPATH/etc/ufw/applications.d/bug407810"
+ do_cmd "0" app info bug407810
+ do_cmd "0" null allow bug407810
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
+ rm -f "$TESTPATH/etc/ufw/applications.d/bug407810"
+ do_cmd "0" null delete allow bug407810
+-grep "^-A .*user-input" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep "^-A .*user-input" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "Bug #459925" >> $TESTTMP/result
+ for ipv6 in yes no ; do
+@@ -141,8 +141,8 @@
+         iptables-save | grep '^-' > $TESTTMP/ipt.enable
+         ip6tables-save | grep '^-' > $TESTTMP/ip6t.enable
+ 
+-        do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init stop
+-        do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init start
++        do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init stop
++        do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init start
+         iptables-save | grep '^-' > $TESTTMP/ipt.start
+         ip6tables-save | grep '^-' > $TESTTMP/ip6t.start
+ 
+@@ -166,7 +166,7 @@
+     if [ "$i" = "off" ]; then
+         e="1"
+     fi
+-    iptables-save | grep -q 'UFW LIMIT BLOCK' $TESTCONFIG/user.rules
++    iptables-save | grep -q 'UFW LIMIT BLOCK' $TESTSTATE/user.rules
+     rc="$?"
+     if [ "$rc" != "$e" ]; then
+         echo "$i: got '$rc', expected '$e'"
+@@ -176,7 +176,7 @@
+ 
+ echo "Bug #513387" >> $TESTTMP/result
+ do_cmd "0" nostats disable
+-$TESTSTATE/ufw-init flush-all >/dev/null
++$TESTLIBEXEC/ufw-init flush-all >/dev/null
+ do_cmd "0" nostats enable
+ for b in INPUT OUTPUT FORWARD; do
+     suffix=`echo $b | tr [A-Z] [a-z]`
+diff -ur ufw-0.35-trans-dir/tests/root/live/result ufw-0.35-libexec-dir/tests/root/live/result
+--- ufw-0.35-trans-dir/tests/root/live/result	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/live/result	2016-10-06 02:20:02.528208029 +0200
+@@ -1925,10 +1925,10 @@
+ 263: disable
+ 
+ 
+-264: tests/testarea/lib/ufw/ufw-init start
++264: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-265: tests/testarea/lib/ufw/ufw-init stop
++265: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+ 266: enable
+diff -ur ufw-0.35-trans-dir/tests/root/live/runtest.sh ufw-0.35-libexec-dir/tests/root/live/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/live/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/live/runtest.sh	2016-10-06 02:53:13.851579762 +0200
+@@ -49,8 +49,8 @@
+ 		do_cmd "0" deny from 2001:db8::/32 port 26 to 2001:db8:3:4:5:6:7:8
+ 	fi
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 	echo "TESTING ARGS (delete allow/deny to/from)" >> $TESTTMP/result
+ 	do_cmd "0" delete allow 53
+@@ -69,8 +69,8 @@
+ 		do_cmd "0" delete deny from 2001:db8::/32 port 26 to 2001:db8:3:4:5:6:7:8
+ 	fi
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ 
+@@ -90,14 +90,14 @@
+ 	do_cmd "0" reject 114/tcp
+ 	do_cmd "0" reject 115/udp
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 	do_cmd "0" delete reject 113
+ 	do_cmd "0" delete reject 114/tcp
+ 	do_cmd "0" delete reject 115/udp
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ echo "Checking flush builtins" >> $TESTTMP/result
+@@ -184,8 +184,8 @@
+ 	do_cmd "0" insert 8 allow $i on eth2 to any app Samba
+ 
+ 	do_cmd "0" status numbered
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 	# delete what we added
+         do_cmd "0" delete allow $i on eth1
+@@ -202,8 +202,8 @@
+ 	do_cmd "0" delete allow $i on eth0 to any app Samba
+ 	do_cmd "0" delete allow $i on eth2 to any app Samba
+ 
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+ done
+ 
+@@ -221,11 +221,11 @@
+ ip6tables-save | grep '^-' > $TESTTMP/ip6t.disable
+ 
+ sed -i 's/^ENABLED=no/ENABLED=yes/' $TESTPATH/etc/ufw/ufw.conf
+-do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init start
++do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init start
+ iptables-save | grep '^-' > $TESTTMP/ipt.start
+ ip6tables-save | grep '^-' > $TESTTMP/ip6t.start
+ 
+-do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init stop
++do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init stop
+ iptables-save | grep '^-' > $TESTTMP/ipt.stop
+ ip6tables-save | grep '^-' > $TESTTMP/ip6t.stop
+ 
+@@ -258,7 +258,7 @@
+ for l in off on low medium high full; do
+     do_cmd "0" nostats logging $l
+     do_cmd "0" nostats disable
+-    $TESTSTATE/ufw-init flush-all >/dev/null
++    $TESTLIBEXEC/ufw-init flush-all >/dev/null
+     do_cmd "0" nostats enable
+     for b in INPUT OUTPUT FORWARD; do
+         for c in before-logging before after after-logging reject track ; do
+@@ -279,7 +279,7 @@
+ for l in off on low medium high full; do
+     do_cmd "0" nostats logging $l
+     do_cmd "0" nostats disable
+-    $TESTSTATE/ufw-init flush-all >/dev/null
++    $TESTLIBEXEC/ufw-init flush-all >/dev/null
+     do_cmd "0" nostats enable
+     for c in logging-deny not-local user-forward user-input user-output skip-to-policy-input ; do
+         echo "$count: ! iptables -L ufw-$c -n | egrep -q '0 references'" >> $TESTTMP/result
+@@ -307,17 +307,17 @@
+ 
+ echo "'Resource temporarily unavailable' test" >> $TESTTMP/result
+ do_cmd "0" nostats disable
+-$TESTSTATE/ufw-init flush-all >/dev/null
++$TESTLIBEXEC/ufw-init flush-all >/dev/null
+ do_cmd "0" nostats allow 22/tcp
+ do_cmd "0" nostats enable
+-$TESTSTATE/ufw-init stop >/dev/null
++$TESTLIBEXEC/ufw-init stop >/dev/null
+ for i in `seq 1 25`; do
+     echo "$count: ufw-init start/flush-all" >> $TESTTMP/result
+-    $TESTSTATE/ufw-init start >/dev/null || {
++    $TESTLIBEXEC/ufw-init start >/dev/null || {
+         echo "'ufw-init start' failed"
+         exit 1
+     }
+-    $TESTSTATE/ufw-init flush-all >/dev/null
++    $TESTLIBEXEC/ufw-init flush-all >/dev/null
+     echo "" >> $TESTTMP/result
+     echo "" >> $TESTTMP/result
+     let count=count+1
+@@ -346,7 +346,7 @@
+     echo "Failed: found 'ufw-user-input', still running." >> $TESTTMP/result
+     exit 1
+ }
+-grep -v -q 12345 $TESTCONFIG/user.rules || {
++grep -v -q 12345 $TESTSTATE/user.rules || {
+     echo "Failed: found '12345' in user.rules" >> $TESTTMP/result
+     exit 1
+ }
+@@ -377,18 +377,18 @@
+         do_cmd "0" nostats allow $i
+     done
+ 
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+     if [ "$ipv6" = "yes" ]; then
+-        grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     fi
+ 
+     for i in 4 3 2 1; do
+-        grep -q "^### tuple ### allow any $i " $TESTCONFIG/user.rules || {
++        grep -q "^### tuple ### allow any $i " $TESTSTATE/user.rules || {
+             echo "Failed: Could not find port '$i' user.rules" >> $TESTTMP/result
+             exit 1
+         }
+         if [ "$ipv6" = "yes" ]; then
+-            grep -q "^### tuple ### allow any $i " $TESTCONFIG/user6.rules || {
++            grep -q "^### tuple ### allow any $i " $TESTSTATE/user6.rules || {
+                 echo "Failed: Could not find port '$i' user6.rules" >> $TESTTMP/result
+                 exit 1
+             }
+@@ -396,22 +396,22 @@
+ 
+         if [ "$ipv6" = "yes" ]; then
+             do_cmd "0" null --force delete $((i+i))
+-            grep -v -q "^### tuple ### allow any $i " $TESTCONFIG/user6.rules || {
++            grep -v -q "^### tuple ### allow any $i " $TESTSTATE/user6.rules || {
+                 echo "Failed: Found port '$i' user6.rules" >> $TESTTMP/result
+                 exit 1
+             }
+-            grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++            grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         fi
+         do_cmd "0" null --force delete $i
+-        grep -v -q "^### tuple ### allow any $i " $TESTCONFIG/user.rules || {
++        grep -v -q "^### tuple ### allow any $i " $TESTSTATE/user.rules || {
+             echo "Failed: Found port '$i' user.rules" >> $TESTTMP/result
+             exit 1
+         }
+-        grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+     done
+ done
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "Testing interface with '+'" >> $TESTTMP/result
+ for ipv6 in yes no
+@@ -423,13 +423,13 @@
+ 	do_cmd "0" nostats enable
+ 
+         do_cmd "0" allow $i on lo+
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 	# delete what we added
+         do_cmd "0" delete allow $i on lo+
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+ done
+ do_cmd "0" nostats disable
+diff -ur ufw-0.35-trans-dir/tests/root/live_apps/runtest.sh ufw-0.35-libexec-dir/tests/root/live_apps/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/live_apps/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/live_apps/runtest.sh	2016-10-06 02:53:51.683777250 +0200
+@@ -166,8 +166,8 @@
+     do_cmd "0" allow Bind9
+     do_cmd "0" insert 1 allow Samba
+     do_cmd "0" insert 2 reject 'Dovecot POP3'
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-    cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+     iptables-save | egrep -v '^(#|:)' > $TESTTMP/save.1
+     ip6tables-save | egrep -v '^(#|:)' >> $TESTTMP/save.1
+@@ -184,8 +184,8 @@
+     do_cmd "0" delete allow Bind9
+     do_cmd "0" delete allow Samba
+     do_cmd "0" delete reject 'Dovecot POP3'
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-    cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+     do_cmd "0" allow Samba
+     do_cmd "0" allow 22
+@@ -194,8 +194,8 @@
+     do_cmd "0" insert 2 allow from 192.168.0.1 to any app Samba
+     do_cmd "0" insert 2 allow from 192.168.0.1 app Samba to 10.0.0.1
+     do_cmd "0" insert 2 allow from any app Samba to 10.0.0.1
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-    cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+     iptables-save | egrep -v '^(#|:)' > $TESTTMP/save.1
+     ip6tables-save | egrep -v '^(#|:)' >> $TESTTMP/save.1
+@@ -215,8 +215,8 @@
+     do_cmd "0" delete allow from 192.168.0.1 to any app Samba
+     do_cmd "0" delete allow from 192.168.0.1 app Samba to 10.0.0.1
+     do_cmd "0" delete allow from any app Samba to 10.0.0.1
+-    cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-    cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++    cat $TESTSTATE/user.rules >> $TESTTMP/result
++    cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ echo "TESTING APPLICATION INTEGRATION (interfaces)" >> $TESTTMP/result
+@@ -226,26 +226,26 @@
+         do_cmd "1" null $j $i on eth0:1 from 10.0.0.1 app Samba
+         do_cmd "0" $j $i on eth0 from 10.0.0.1 to any app Samba
+         do_cmd "0" status
+-        grep -A3 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-        grep -A3 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A3 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++        grep -A3 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         do_cmd "0" delete $j $i on eth0 to 192.168.0.1 app Samba
+         do_cmd "0" delete $j $i on eth0 from 10.0.0.1 to any app Samba
+         do_cmd "0" status
+-        grep -A3 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-        grep -A3 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A3 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++        grep -A3 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+     do_cmd "0" allow $i on eth0 to any app Bind9
+     do_cmd "0" insert 1 allow $i on eth2 to any app Samba
+     do_cmd "0" status
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-    grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+     do_cmd "0" delete allow $i on eth0 to any app Bind9
+     do_cmd "0" delete allow $i on eth2 to any app Samba
+     do_cmd "0" status
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-    grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ echo "Delete by number" >> $TESTTMP/result
+@@ -260,58 +260,58 @@
+     do_cmd "0" nostats allow Samba
+     do_cmd "0" nostats allow 22/tcp
+ 
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+     if [ "$ipv6" = "yes" ]; then
+-        grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     fi
+ 
+     if [ "$ipv6" = "yes" ]; then
+         do_cmd "0" null --force delete 6
+-        grep -v -q "^### tuple ### allow any 22 " $TESTCONFIG/user6.rules || {
++        grep -v -q "^### tuple ### allow any 22 " $TESTSTATE/user6.rules || {
+             echo "Failed: Found port '22' in user6.rules" >> $TESTTMP/result
+             exit 1
+         }
+-        grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     fi
+ 
+     do_cmd "0" null --force delete 3
+-    grep -v -q "^### tuple ### allow any 22 " $TESTCONFIG/user.rules || {
++    grep -v -q "^### tuple ### allow any 22 " $TESTSTATE/user.rules || {
+         echo "Failed: Found port '22' in user.rules" >> $TESTTMP/result
+         exit 1
+     }
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+     if [ "$ipv6" = "yes" ]; then
+         do_cmd "0" null --force delete 4
+-        grep -v -q "dapp_Samba" $TESTCONFIG/user6.rules || {
++        grep -v -q "dapp_Samba" $TESTSTATE/user6.rules || {
+             echo "Failed: Found dapp_Samba in user6.rules" >> $TESTTMP/result
+             exit 1
+         }
+-        grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     fi
+ 
+     do_cmd "0" null --force delete 2
+-    grep -v -q "dapp_Samba" $TESTCONFIG/user.rules || {
++    grep -v -q "dapp_Samba" $TESTSTATE/user.rules || {
+         echo "Failed: Found dapp_Samba in user.rules" >> $TESTTMP/result
+         exit 1
+     }
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+     if [ "$ipv6" = "yes" ]; then
+         do_cmd "0" null --force delete 2
+-        grep -v -q "sapp_Samba" $TESTCONFIG/user6.rules || {
++        grep -v -q "sapp_Samba" $TESTSTATE/user6.rules || {
+             echo "Failed: Found sapp_Samba in user6.rules" >> $TESTTMP/result
+             exit 1
+         }
+-        grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     fi
+ 
+     do_cmd "0" null --force delete 1
+-    grep -v -q "sapp_Samba" $TESTCONFIG/user.rules || {
++    grep -v -q "sapp_Samba" $TESTSTATE/user.rules || {
+         echo "Failed: Found sapp_Samba in user.rules" >> $TESTTMP/result
+         exit 1
+     }
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ 
+ done
+diff -ur ufw-0.35-trans-dir/tests/root/live_route/result ufw-0.35-libexec-dir/tests/root/live_route/result
+--- ufw-0.35-trans-dir/tests/root/live_route/result	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/live_route/result	2016-10-06 02:20:02.530208040 +0200
+@@ -1997,10 +1997,10 @@
+ 272: disable
+ 
+ 
+-273: tests/testarea/lib/ufw/ufw-init start
++273: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-274: tests/testarea/lib/ufw/ufw-init stop
++274: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+ 275: enable
+diff -ur ufw-0.35-trans-dir/tests/root/live_route/runtest.sh ufw-0.35-libexec-dir/tests/root/live_route/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/live_route/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/live_route/runtest.sh	2016-10-06 02:53:32.152675296 +0200
+@@ -43,8 +43,8 @@
+ 		do_cmd "0" route deny from 2001:db8::/32 port 26 to 2001:db8:3:4:5:6:7:8
+ 	fi
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 	echo "TESTING ARGS (delete route allow/route deny to/from)" >> $TESTTMP/result
+ 	do_cmd "0" route delete allow 53
+@@ -63,8 +63,8 @@
+ 		do_cmd "0" route delete deny from 2001:db8::/32 port 26 to 2001:db8:3:4:5:6:7:8
+ 	fi
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ 
+@@ -79,14 +79,14 @@
+ 	do_cmd "0" route reject 114/tcp
+ 	do_cmd "0" route reject 115/udp
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 	do_cmd "0" route delete reject 113
+ 	do_cmd "0" route delete reject 114/tcp
+ 	do_cmd "0" route delete reject 115/udp
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ echo "Checking flush builtins" >> $TESTTMP/result
+@@ -181,8 +181,8 @@
+ 	do_cmd "0" route insert 8 allow $i on $dmz_if to any app Samba
+ 
+ 	do_cmd "0" status numbered
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 	# delete what we added
+         do_cmd "0" route delete allow $i on $fake_if
+@@ -201,8 +201,8 @@
+         do_cmd "0" route delete allow in on $in_if out on $out_if from 192.168.0.1 port 25 to 10.0.0.1 port 25 proto tcp
+         do_cmd "0" route delete allow in on $in_if out on $dmz_if
+ 
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+ done
+ 
+@@ -220,11 +220,11 @@
+ ip6tables-save | grep '^-' > $TESTTMP/ip6t.disable
+ 
+ sed -i 's/^ENABLED=no/ENABLED=yes/' $TESTPATH/etc/ufw/ufw.conf
+-do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init start
++do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init start
+ iptables-save | grep '^-' > $TESTTMP/ipt.start
+ ip6tables-save | grep '^-' > $TESTTMP/ip6t.start
+ 
+-do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init stop
++do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init stop
+ iptables-save | grep '^-' > $TESTTMP/ipt.stop
+ ip6tables-save | grep '^-' > $TESTTMP/ip6t.stop
+ 
+@@ -265,18 +265,18 @@
+         do_cmd "0" nostats route allow $i
+     done
+ 
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+     if [ "$ipv6" = "yes" ]; then
+-        grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+     fi
+ 
+     for i in 4 3 2 1; do
+-        grep -q "^### tuple ### route:allow any $i " $TESTCONFIG/user.rules || {
++        grep -q "^### tuple ### route:allow any $i " $TESTSTATE/user.rules || {
+             echo "Failed: Could not find port '$i' user.rules" >> $TESTTMP/result
+             exit 1
+         }
+         if [ "$ipv6" = "yes" ]; then
+-            grep -q "^### tuple ### route:allow any $i " $TESTCONFIG/user6.rules || {
++            grep -q "^### tuple ### route:allow any $i " $TESTSTATE/user6.rules || {
+                 echo "Failed: Could not find port '$i' user6.rules" >> $TESTTMP/result
+                 exit 1
+             }
+@@ -284,22 +284,22 @@
+ 
+         if [ "$ipv6" = "yes" ]; then
+             do_cmd "0" null --force delete $((i+i))
+-            grep -v -q "^### tuple ### route:allow any $i " $TESTCONFIG/user6.rules || {
++            grep -v -q "^### tuple ### route:allow any $i " $TESTSTATE/user6.rules || {
+                 echo "Failed: Found port '$i' user6.rules" >> $TESTTMP/result
+                 exit 1
+             }
+-            grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++            grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         fi
+         do_cmd "0" null --force delete $i
+-        grep -v -q "^### tuple ### route:allow any $i " $TESTCONFIG/user.rules || {
++        grep -v -q "^### tuple ### route:allow any $i " $TESTSTATE/user.rules || {
+             echo "Failed: Found port '$i' user.rules" >> $TESTTMP/result
+             exit 1
+         }
+-        grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++        grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+     done
+ done
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "Show added" >> $TESTTMP/result
+ for ipv6 in yes no
+diff -ur ufw-0.35-trans-dir/tests/root/logging/result ufw-0.35-libexec-dir/tests/root/logging/result
+--- ufw-0.35-trans-dir/tests/root/logging/result	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/logging/result	2016-10-06 02:20:02.532208050 +0200
+@@ -1636,106 +1636,106 @@
+ 67: enable
+ 
+ 
+-68: tests/testarea/lib/ufw/ufw-init flush-all
++68: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-69: tests/testarea/lib/ufw/ufw-init start
++69: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-70: tests/testarea/lib/ufw/ufw-init stop
++70: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-71: tests/testarea/lib/ufw/ufw-init start
++71: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 72: logging off
+ 
+ 
+-73: tests/testarea/lib/ufw/ufw-init flush-all
++73: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-74: tests/testarea/lib/ufw/ufw-init start
++74: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-75: tests/testarea/lib/ufw/ufw-init stop
++75: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-76: tests/testarea/lib/ufw/ufw-init start
++76: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 77: logging on
+ 
+ 
+-78: tests/testarea/lib/ufw/ufw-init flush-all
++78: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-79: tests/testarea/lib/ufw/ufw-init start
++79: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-80: tests/testarea/lib/ufw/ufw-init stop
++80: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-81: tests/testarea/lib/ufw/ufw-init start
++81: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 82: logging low
+ 
+ 
+-83: tests/testarea/lib/ufw/ufw-init flush-all
++83: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-84: tests/testarea/lib/ufw/ufw-init start
++84: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-85: tests/testarea/lib/ufw/ufw-init stop
++85: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-86: tests/testarea/lib/ufw/ufw-init start
++86: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 87: logging medium
+ 
+ 
+-88: tests/testarea/lib/ufw/ufw-init flush-all
++88: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-89: tests/testarea/lib/ufw/ufw-init start
++89: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-90: tests/testarea/lib/ufw/ufw-init stop
++90: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-91: tests/testarea/lib/ufw/ufw-init start
++91: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 92: logging high
+ 
+ 
+-93: tests/testarea/lib/ufw/ufw-init flush-all
++93: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-94: tests/testarea/lib/ufw/ufw-init start
++94: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-95: tests/testarea/lib/ufw/ufw-init stop
++95: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-96: tests/testarea/lib/ufw/ufw-init start
++96: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 97: logging full
+ 
+ 
+-98: tests/testarea/lib/ufw/ufw-init flush-all
++98: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-99: tests/testarea/lib/ufw/ufw-init start
++99: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-100: tests/testarea/lib/ufw/ufw-init stop
++100: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-101: tests/testarea/lib/ufw/ufw-init start
++101: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ Setting IPV6 to no
+@@ -1745,106 +1745,106 @@
+ 103: enable
+ 
+ 
+-104: tests/testarea/lib/ufw/ufw-init flush-all
++104: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-105: tests/testarea/lib/ufw/ufw-init start
++105: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-106: tests/testarea/lib/ufw/ufw-init stop
++106: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-107: tests/testarea/lib/ufw/ufw-init start
++107: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 108: logging off
+ 
+ 
+-109: tests/testarea/lib/ufw/ufw-init flush-all
++109: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-110: tests/testarea/lib/ufw/ufw-init start
++110: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-111: tests/testarea/lib/ufw/ufw-init stop
++111: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-112: tests/testarea/lib/ufw/ufw-init start
++112: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 113: logging on
+ 
+ 
+-114: tests/testarea/lib/ufw/ufw-init flush-all
++114: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-115: tests/testarea/lib/ufw/ufw-init start
++115: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-116: tests/testarea/lib/ufw/ufw-init stop
++116: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-117: tests/testarea/lib/ufw/ufw-init start
++117: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 118: logging low
+ 
+ 
+-119: tests/testarea/lib/ufw/ufw-init flush-all
++119: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-120: tests/testarea/lib/ufw/ufw-init start
++120: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-121: tests/testarea/lib/ufw/ufw-init stop
++121: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-122: tests/testarea/lib/ufw/ufw-init start
++122: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 123: logging medium
+ 
+ 
+-124: tests/testarea/lib/ufw/ufw-init flush-all
++124: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-125: tests/testarea/lib/ufw/ufw-init start
++125: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-126: tests/testarea/lib/ufw/ufw-init stop
++126: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-127: tests/testarea/lib/ufw/ufw-init start
++127: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 128: logging high
+ 
+ 
+-129: tests/testarea/lib/ufw/ufw-init flush-all
++129: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-130: tests/testarea/lib/ufw/ufw-init start
++130: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-131: tests/testarea/lib/ufw/ufw-init stop
++131: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-132: tests/testarea/lib/ufw/ufw-init start
++132: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 133: logging full
+ 
+ 
+-134: tests/testarea/lib/ufw/ufw-init flush-all
++134: tests/testarea/usr/libexec/ufw/ufw-init flush-all
+ 
+ 
+-135: tests/testarea/lib/ufw/ufw-init start
++135: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+-136: tests/testarea/lib/ufw/ufw-init stop
++136: tests/testarea/usr/libexec/ufw/ufw-init stop
+ 
+ 
+-137: tests/testarea/lib/ufw/ufw-init start
++137: tests/testarea/usr/libexec/ufw/ufw-init start
+ 
+ 
+ 138: disable
+diff -ur ufw-0.35-trans-dir/tests/root/logging/runtest.sh ufw-0.35-libexec-dir/tests/root/logging/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/logging/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/logging/runtest.sh	2016-10-06 02:54:58.852127874 +0200
+@@ -32,8 +32,8 @@
+         do_cmd "0" nostats $i $j Samba
+         do_cmd "0" nostats $i $j from $from to $to port smtp
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         iptables-save | egrep -v '^(#|:)' > $TESTTMP/save.1
+         ip6tables-save | egrep -v '^(#|:)' >> $TESTTMP/save.1
+@@ -50,14 +50,14 @@
+         do_cmd "0" nostats delete $i $j Samba
+         do_cmd "0" nostats delete $i $j from $from to $to port smtp
+         echo "contents of user*.rules:" >> $TESTTMP/result
+-        cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-        cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++        cat $TESTSTATE/user.rules >> $TESTTMP/result
++        cat $TESTSTATE/user6.rules >> $TESTTMP/result
+     done
+ done
+ 
+ echo "contents of user*.rules:" >> $TESTTMP/result
+-cat $TESTCONFIG/user.rules >> $TESTTMP/result
+-cat $TESTCONFIG/user6.rules >> $TESTTMP/result
++cat $TESTSTATE/user.rules >> $TESTTMP/result
++cat $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "Verify iptables-restore headers" >> $TESTTMP/result
+ for ipv6 in yes no ; do
+@@ -69,10 +69,10 @@
+         if [ -n "$i" ]; then
+             do_cmd "0" nostats logging $i
+         fi
+-        do_extcmd "0" nostats $TESTPATH/lib/ufw/ufw-init flush-all
+-        do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init start
+-        do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init stop
+-        do_extcmd "0" null $TESTPATH/lib/ufw/ufw-init start
++        do_extcmd "0" nostats $TESTPATH/usr/libexec/ufw/ufw-init flush-all
++        do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init start
++        do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init stop
++        do_extcmd "0" null $TESTPATH/usr/libexec/ufw/ufw-init start
+     done
+ done
+ 
+diff -ur ufw-0.35-trans-dir/tests/root/normalization/runtest.sh ufw-0.35-libexec-dir/tests/root/normalization/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/normalization/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/normalization/runtest.sh	2016-10-06 02:54:45.058055868 +0200
+@@ -20,53 +20,53 @@
+ echo "TESTING EQUIVALENT PORTS" >> $TESTTMP/result
+ do_cmd "0" http-or-www allow http
+ do_cmd "0" delete allow 80/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow 80/tcp
+ do_cmd "0" http-or-www delete allow http
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" http-or-www allow http
+ do_cmd "0" delete allow to any port 80 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow to any port 80 proto tcp
+ do_cmd "0" http-or-www delete allow http
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow 80/tcp
+ do_cmd "0" delete allow to any port 80 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow to any port 80 proto tcp
+ do_cmd "0" delete allow 80/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ 
+ echo "TESTING EQUIVALENT NETMASKS (HOST)" >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.1/255.255.255.255
+ do_cmd "0" delete allow from 192.168.0.1
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow from 192.168.0.1/255.255.255.255
+ do_cmd "0" delete allow from 192.168.0.1/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow from 192.168.0.1
+ do_cmd "0" delete allow from 192.168.0.1/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow from 192.168.0.1
+ do_cmd "0" delete allow from 192.168.0.1/255.255.255.255
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow from 192.168.0.1/32
+ do_cmd "0" delete allow from 192.168.0.1
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow from 192.168.0.1/32
+ do_cmd "0" delete allow from 192.168.0.1/255.255.255.255
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ 
+ echo "TESTING EQUIVALENT NETMASKS (NETWORK)" >> $TESTTMP/result
+@@ -85,11 +85,11 @@
+ 
+     do_cmd "0" allow from 192.168.0.0/$mask
+     do_cmd "0" delete allow from 192.168.0.0/$cidr
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+     do_cmd "0" allow from 192.168.0.0/$cidr
+     do_cmd "0" delete allow from 192.168.0.0/$mask
+-    grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++    grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+     cidr=$((cidr-1))
+ done
+diff -ur ufw-0.35-trans-dir/tests/root/valid/runtest.sh ufw-0.35-libexec-dir/tests/root/valid/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/valid/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/valid/runtest.sh	2016-10-06 02:54:29.119972670 +0200
+@@ -59,41 +59,41 @@
+ do_cmd "0"  deny 25
+ do_cmd "0"  deny 1
+ do_cmd "0"  deny 65535
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete deny 25
+ do_cmd "0"  delete deny 1
+ do_cmd "0"  delete deny 65535
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ 
+ echo "TESTING ARGS (allow/deny to/from)" >> $TESTTMP/result
+ echo "Man page" >> $TESTTMP/result
+ do_cmd "0"  allow 53
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow 25/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  deny to any port 80 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  deny from 10.0.0.0/8 to 192.168.0.1 port 25 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  limit 22/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  deny 53
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow 80/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow from 10.0.0.0/8
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow from 172.16.0.0/12
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow from 192.168.0.0/16
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  deny from 1.2.3.4 to any port 514 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow from 1.2.3.5 port 5469 proto udp to 1.2.3.4 port 5469
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  reject auth
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  delete allow 25/tcp
+ do_cmd "0"  delete deny from 10.0.0.0/8 to 192.168.0.1 port 25 proto tcp
+@@ -106,74 +106,74 @@
+ do_cmd "0"  delete deny from 1.2.3.4 to any port 514 proto udp
+ do_cmd "0"  delete allow from 1.2.3.5 port 5469 proto udp to 1.2.3.4 port 5469
+ do_cmd "0"  delete reject auth
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ 
+ echo "SIMPLE" >> $TESTTMP/result
+ do_cmd "0"  allow 25
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow 25
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow 25/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow 25/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow 25/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow 25/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow 25
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow 25
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow 25/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow 25/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow 25/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow 25/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow smtp/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow smtp/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow tftp/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow tftp/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow ssh/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow ssh/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow ssh/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow ssh/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ 
+ echo "TO/FROM" >> $TESTTMP/result
+@@ -186,60 +186,60 @@
+                 context="5"
+         fi
+         do_cmd "0"  $x from $from
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x from $from
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to from $from
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to from $from
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+         do_cmd "0"  $x from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to port 25
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to port 25
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to port 25 from $from
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to port 25 from $from
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to port 25 from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to port 25 from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         for y in udp tcp
+         do
+                 do_cmd "0"  $x from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to port 25 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to port 25 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to port 25 proto $y from $from
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to port 25 proto $y from $from
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to port 25 proto $y from $from port 80
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to port 25 proto $y from $from port 80
+-		grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+         done
+ done
+ 
+@@ -247,200 +247,200 @@
+ do_cmd "0" --dry-run status 
+ 
+ do_cmd "0"  allow to any port smtp from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port domain
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port domain
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow to any port smtp from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port domain proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port domain proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port domain proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port domain proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "TESTING NETMASK" >> $TESTTMP/result
+ do_cmd "0" allow to 192.168.0.0/0
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 192.168.0.0/0
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow to 192.168.0.0/16
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 192.168.0.0/16
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow to 192.168.0.1/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 192.168.0.1/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.0/0
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 192.168.0.0/0
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.0/16
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 192.168.0.0/16
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.1/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 192.168.0.1/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.1/32 to 192.168.0.2/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 192.168.0.1/32 to 192.168.0.2/32
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.2/255.255.0.2 
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 192.168.0.2/255.255.0.2
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "LP bug 237446" >> $TESTTMP/result
+ do_cmd "0" allow to 111.12.34.2/4
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 111.12.34.2/4
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 111.12.34.2/4
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 96.0.0.0/4
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ echo "TESTING MULTIPORT" >> $TESTTMP/result
+ do_cmd "0" allow to 192.168.0.1 port 80:83 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 192.168.0.1 port 80:83 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow to 192.168.0.1 port 80:83,22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 192.168.0.1 port 80:83,22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow from 192.168.0.1 port 35:39 to 192.168.0.2 port 22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 192.168.0.1 port 35:39 to 192.168.0.2 port 22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow to any port 23,21,15:19,22 from any port 24:26 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to any port 23,21,15:19,22 from any port 24:26 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow 34,35/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow 34,35/tcp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" allow 34,35:39/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow 34,35:39/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" deny 35:39/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete deny 35:39/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" deny 23,21,15:19,22/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete deny 23,21,15:19,22/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ cleanup
+ 
+diff -ur ufw-0.35-trans-dir/tests/root/valid6/runtest.sh ufw-0.35-libexec-dir/tests/root/valid6/runtest.sh
+--- ufw-0.35-trans-dir/tests/root/valid6/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root/valid6/runtest.sh	2016-10-06 02:52:52.735469534 +0200
+@@ -73,10 +73,10 @@
+ echo "TESTING ARGS (allow/deny to/from)" >> $TESTTMP/result
+ echo "Man page" >> $TESTTMP/result
+ do_cmd "0" deny proto tcp from 2001:db8::/32 to any port 25
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  delete deny proto tcp from 2001:db8::/32 to any port 25
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 
+ echo "TO/FROM" >> $TESTTMP/result
+@@ -89,288 +89,288 @@
+                 context="5"
+         fi
+         do_cmd "0"  $x from $from
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x from $from
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to from $from
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to from $from
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+         do_cmd "0"  $x from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to port 25
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to port 25
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to port 25 from $from
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to port 25 from $from
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  $x to $to port 25 from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         do_cmd "0"  delete $x to $to port 25 from $from port 80
+-	grep -A$context "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A$context "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         for y in udp tcp
+         do
+                 do_cmd "0"  $x from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to port 25 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to port 25 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to from $from port 80 proto $y
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to port 25 proto $y from $from
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to port 25 proto $y from $from
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  $x to $to port 25 proto $y from $from port 80
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+                 do_cmd "0"  delete $x to $to port 25 proto $y from $from port 80
+-		grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++		grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+         done
+ done
+ 
+ do_cmd "0" null --dry-run allow to 2001:db8:0000:0000:0000:0000:0000:0001/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 
+ do_cmd "0"  allow to any port smtp from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port smtp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port tftp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port 23
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port ssh
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port domain
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port domain
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0"  allow to any port smtp from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port smtp from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port smtp from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port smtp proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port tftp from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port tftp from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port tftp proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port 23 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port ssh proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port domain proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port domain proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port 23 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port 23 from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port 23 from any port ssh proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  allow to any port ssh from any port domain proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0"  delete allow to any port ssh from any port domain proto udp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "TESTING NETMASK" >> $TESTTMP/result
+ do_cmd "0" allow to ::1/0
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to ::1/0
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow to ::1/32
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to ::1/32
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow to ::1/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to ::1/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow from ::1/0
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from ::1/0
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow from ::1/32
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from ::1/32
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow from ::1/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from ::1/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow from ::1/32 to ::1/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from ::1/32 to ::1/128
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "TESTING MULTIPORT" >> $TESTTMP/result
+ do_cmd "0" allow to 2001:db8:85a3:8d3:1319:8a2e:370:7341 port 80:83 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 2001:db8:85a3:8d3:1319:8a2e:370:7341 port 80:83 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow to 2001:db8:85a3:8d3:1319:8a2e:370:7341 port 80:83,22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 2001:db8:85a3:8d3:1319:8a2e:370:7341 port 80:83,22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow from 2001:db8:85a3:8d3:1319:8a2e:370:7341 port 35:39 to 2001:db8:85a3:8d3:1319:8a2e:370:7342 port 22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow from 2001:db8:85a3:8d3:1319:8a2e:370:7341 port 35:39 to 2001:db8:85a3:8d3:1319:8a2e:370:7342 port 22 proto tcp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow to any port 23,21,15:19,22 from any port 24:26 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to any port 23,21,15:19,22 from any port 24:26 proto udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow 23,21,15:19,22/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow 23,21,15:19,22/udp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ echo "TESTING IPSec" >> $TESTTMP/result
+ do_cmd "0" allow to 10.0.0.1 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 10.0.0.1 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" deny to 10.0.0.1 from 10.4.0.0/16 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete deny to 10.0.0.1 from 10.4.0.0/16 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" limit to 10.0.0.1 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete limit to 10.0.0.1 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" reject to 10.0.0.1 from 10.4.0.0/16 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ do_cmd "0" delete reject to 10.0.0.1 from 10.4.0.0/16 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
+ 
+ do_cmd "0" reject to 2001:db8:85a3:8d3:1319:8a2e:370:734 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete reject to 2001:db8:85a3:8d3:1319:8a2e:370:734 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto esp
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" deny to 2001:db8:85a3:8d3:1319:8a2e:370:734 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete deny to 2001:db8:85a3:8d3:1319:8a2e:370:734 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to 2001:db8:85a3:8d3:1319:8a2e:370:734 from 2001:db8::/32 proto ah
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ do_cmd "0" allow to any proto esp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete allow to any proto esp
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" deny to any proto ah
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ do_cmd "0" delete deny to any proto ah
+-grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ cleanup
+ exit 0
+diff -ur ufw-0.35-trans-dir/tests/root_kern/limit6/runtest.sh ufw-0.35-libexec-dir/tests/root_kern/limit6/runtest.sh
+--- ufw-0.35-trans-dir/tests/root_kern/limit6/runtest.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/root_kern/limit6/runtest.sh	2016-10-06 02:52:11.839256052 +0200
+@@ -28,16 +28,16 @@
+ 	do_cmd "0" limit from any port 24 proto udp
+ 	do_cmd "0" limit in on eth1 to any port 23
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ 
+ 	echo "TESTING ARGS (delete allow/deny to/from)" >> $TESTTMP/result
+ 	do_cmd "0" delete limit 22/tcp
+ 	do_cmd "0" delete limit from any port 24 proto udp
+ 	do_cmd "0" delete limit in on eth1 to any port 23
+ 	do_cmd "0" status
+-	grep -A2 "tuple" $TESTCONFIG/user.rules >> $TESTTMP/result
+-	grep -A2 "tuple" $TESTCONFIG/user6.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user.rules >> $TESTTMP/result
++	grep -A2 "tuple" $TESTSTATE/user6.rules >> $TESTTMP/result
+ done
+ 
+ 
+@@ -65,7 +65,7 @@
+ for l in off on low medium high full; do
+     do_cmd "0" nostats logging $l
+     do_cmd "0" nostats disable
+-    $TESTSTATE/ufw-init flush-all >/dev/null
++    $TESTLIBEXEC/ufw-init flush-all >/dev/null
+     do_cmd "0" nostats enable
+     for c in user-limit user-limit-accept ; do
+         echo "$count: ip6tables -L ufw6-$c -n | egrep -q '0 references'" >> $TESTTMP/result
+diff -ur ufw-0.35-trans-dir/tests/testlib.sh ufw-0.35-libexec-dir/tests/testlib.sh
+--- ufw-0.35-trans-dir/tests/testlib.sh	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/testlib.sh	2016-10-06 02:20:02.533208055 +0200
+@@ -107,6 +107,6 @@
+ 
+ cleanup() {
+     do_cmd "0" nostats disable
+-    $TESTSTATE/ufw-init flush-all
++    $TESTLIBEXEC/ufw-init flush-all
+ }
+ 
+diff -ur ufw-0.35-trans-dir/tests/unit/support.py ufw-0.35-libexec-dir/tests/unit/support.py
+--- ufw-0.35-trans-dir/tests/unit/support.py	2016-10-05 05:38:21.768710217 +0200
++++ ufw-0.35-libexec-dir/tests/unit/support.py	2016-10-06 02:20:02.534208060 +0200
+@@ -68,7 +68,9 @@
+     ufw.common.config_dir = os.path.join(
+                              os.path.realpath(topdir), "ufw/etc")
+     ufw.common.state_dir = os.path.join(
+-                            os.path.realpath(topdir), "ufw/lib/ufw")
++                            os.path.realpath(topdir), "ufw/var/lib/ufw")
++    ufw.common.libexec_dir = os.path.join(
++                            os.path.realpath(topdir), "ufw/usr/libexec/ufw")
+     ufw.common.share_dir = os.path.join(
+                             os.path.realpath(topdir), "ufw/usr/share/ufw")
+     ufw.common.trans_dir = os.path.join(
+diff -ur ufw-0.35-trans-dir/tests/unit/test_backend_iptables.py ufw-0.35-libexec-dir/tests/unit/test_backend_iptables.py
+--- ufw-0.35-trans-dir/tests/unit/test_backend_iptables.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-libexec-dir/tests/unit/test_backend_iptables.py	2016-10-06 02:20:02.534208060 +0200
+@@ -52,7 +52,7 @@
+                                         os.environ['PATH'])
+ 
+         # update ufw-init-functions to use our fake iptables* commands
+-        f = os.path.join(ufw.common.state_dir, "ufw-init-functions")
++        f = os.path.join(ufw.common.libexec_dir, "ufw-init-functions")
+         contents = ""
+         for line in open(f).readlines():
+             if re.search("^PATH=", line):
