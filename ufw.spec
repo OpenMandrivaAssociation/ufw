@@ -1,6 +1,6 @@
 Name:           ufw
 Version:        0.35
-Release:        16%{?dist}
+Release:        1
 Summary:        Uncomplicated Firewall
  
 License:        GPLv3
@@ -39,7 +39,7 @@ Patch8:         ufw-0.35-no-pointless-env.patch
  
 BuildArch:      noarch
  
-BuildRequires:  python3-devel
+BuildRequires:  python-devel
 BuildRequires:  iptables
 BuildRequires:  gettext
 BuildRequires:  systemd
@@ -72,9 +72,9 @@ rm -f profiles/*.additional-profiles
 %patch8 -p1 -b .no-pointless-env
  
 %build
-%py3_build
+%py_build
 %install
-%py3_install
+%py_install
 install -D -p -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/ufw.service
 %find_lang %{name}
  
