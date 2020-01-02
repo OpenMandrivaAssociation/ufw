@@ -1,0 +1,16 @@
+diff -Nur ufw-0.34~rc/profiles/fedora-icecream ufw-0.34~rc-additional-profiles/profiles/fedora-icecream
+--- ufw-0.34~rc/profiles/fedora-icecream	1970-01-01 01:00:00.000000000 +0100
++++ ufw-0.34~rc-additional-profiles/profiles/fedora-icecream	2015-09-11 01:10:48.525445694 +0200
+@@ -0,0 +1,4 @@
++[Icecream]
++title=Icecream
++description=Distributed compiler with a central scheduler to share build load
++ports=10245,8765,8766/tcp|8765/udp
+diff -Nur ufw-0.34~rc/profiles/fedora-kdeconnect ufw-0.34~rc-additional-profiles/profiles/fedora-kdeconnect
+--- ufw-0.34~rc/profiles/fedora-kdeconnect	1970-01-01 01:00:00.000000000 +0100
++++ ufw-0.34~rc-additional-profiles/profiles/fedora-kdeconnect	2015-09-11 01:14:32.049742082 +0200
+@@ -0,0 +1,4 @@
++[KDE Connect]
++title=KDE Connect
++description=KDE Connect allows intercommunicating with mobile devices to receive messages and notifications
++ports=1714:1764/tcp|1714:1764/udp
