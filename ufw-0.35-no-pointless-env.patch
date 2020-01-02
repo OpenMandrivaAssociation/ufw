@@ -1,0 +1,12 @@
+diff -ur ufw-0.35/setup.py ufw-0.35-no-pointless-env/setup.py
+--- ufw-0.35/setup.py	2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35-no-pointless-env/setup.py	2016-12-30 21:33:44.076397954 +0100
+@@ -126,7 +126,7 @@
+         print("Updating staging/ufw to use %s" % (sys.executable))
+         subprocess.call(["sed",
+                          "-i",
+-                         "1s%^#.*python.*%#! /usr/bin/env " + sys.executable + "%g",
++                         "1s%^#.*python.*%#!" + sys.executable + "%g",
+                          'staging/ufw'])
+         self.copy_file('staging/ufw', script)
+         self.copy_file('doc/ufw.8', manpage)
