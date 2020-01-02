@@ -1,0 +1,150 @@
+diff -Nur ufw-0.34~rc-default-allow-ssh/conf/before6.rules ufw-0.34~rc-multicast/conf/before6.rules
+--- ufw-0.34~rc-default-allow-ssh/conf/before6.rules	2014-12-08 05:18:18.000000000 +0100
++++ ufw-0.34~rc-multicast/conf/before6.rules	2015-01-24 18:36:18.000000000 +0100
+@@ -63,11 +63,5 @@
+ # allow dhcp client to work
+ -A ufw6-before-input -p udp -s fe80::/10 --sport 547 -d fe80::/10 --dport 546 -j ACCEPT
+ 
+-# allow MULTICAST mDNS for service discovery
+--A ufw6-before-input -p udp -d ff02::fb --dport 5353 -j ACCEPT
+-
+-# allow MULTICAST UPnP for service discovery
+--A ufw6-before-input -p udp -d ff02::f --dport 1900 -j ACCEPT
+-
+ # don't delete the 'COMMIT' line or these rules won't be processed
+ COMMIT
+diff -Nur ufw-0.34~rc-default-allow-ssh/conf/before.rules ufw-0.34~rc-multicast/conf/before.rules
+--- ufw-0.34~rc-default-allow-ssh/conf/before.rules	2014-12-08 05:18:18.000000000 +0100
++++ ufw-0.34~rc-multicast/conf/before.rules	2015-01-24 18:36:13.000000000 +0100
+@@ -65,13 +65,5 @@
+ -A ufw-not-local -m limit --limit 3/min --limit-burst 10 -j ufw-logging-deny
+ -A ufw-not-local -j DROP
+ 
+-# allow MULTICAST mDNS for service discovery (be sure the MULTICAST line above
+-# is uncommented)
+--A ufw-before-input -p udp -d 224.0.0.251 --dport 5353 -j ACCEPT
+-
+-# allow MULTICAST UPnP for service discovery (be sure the MULTICAST line above
+-# is uncommented)
+--A ufw-before-input -p udp -d 239.255.255.250 --dport 1900 -j ACCEPT
+-
+ # don't delete the 'COMMIT' line or these rules won't be processed
+ COMMIT
+diff -Nur ufw-0.34~rc-default-allow-ssh/conf/user6.rules ufw-0.34~rc-multicast/conf/user6.rules
+--- ufw-0.34~rc-default-allow-ssh/conf/user6.rules	2014-12-08 06:52:31.000000000 +0100
++++ ufw-0.34~rc-multicast/conf/user6.rules	2015-01-24 19:48:43.000000000 +0100
+@@ -20,6 +20,9 @@
+ ### tuple ### allow tcp 22 ::/0 any ::/0 SSH - in
+ -A ufw6-user-input -p tcp --dport 22 -j ACCEPT -m comment --comment 'dapp_SSH'
+ 
++### tuple ### allow udp 5353 ff02::fb any ::/0 mDNS - in
++-A ufw6-user-input -p udp -d ff02::fb --dport 5353 -j ACCEPT -m comment --comment 'dapp_mDNS'
++
+ ### END RULES ###
+ 
+ ### LOGGING ###
+diff -Nur ufw-0.34~rc-default-allow-ssh/conf/user.rules ufw-0.34~rc-multicast/conf/user.rules
+--- ufw-0.34~rc-default-allow-ssh/conf/user.rules	2014-12-08 06:52:30.000000000 +0100
++++ ufw-0.34~rc-multicast/conf/user.rules	2015-01-24 19:48:21.000000000 +0100
+@@ -20,6 +20,9 @@
+ ### tuple ### allow tcp 22 0.0.0.0/0 any 0.0.0.0/0 SSH - in
+ -A ufw-user-input -p tcp --dport 22 -j ACCEPT -m comment --comment 'dapp_SSH'
+ 
++### tuple ### allow udp 5353 224.0.0.251 any 0.0.0.0/0 mDNS - in
++-A ufw-user-input -p udp -d 224.0.0.251 --dport 5353 -j ACCEPT -m comment --comment 'dapp_mDNS'
++
+ ### END RULES ###
+ 
+ ### LOGGING ###
+diff -Nur ufw-0.34~rc-default-allow-ssh/doc/ufw.8 ufw-0.34~rc-multicast/doc/ufw.8
+--- ufw-0.34~rc-default-allow-ssh/doc/ufw.8	2014-12-08 07:06:33.000000000 +0100
++++ ufw-0.34~rc-multicast/doc/ufw.8	2015-01-24 18:42:06.000000000 +0100
+@@ -357,6 +357,26 @@
+ to use a default \fBallow\fR policy for application profiles. Carefully
+ consider the security ramifications before using a default \fBallow\fR policy.
+ 
++.SH APPLICATION INTEGRATION EXAMPLES
++.PP
++Disallow incoming SSH (allowed by default):
++  ufw delete allow to any app SSH
++
++Allow incoming UPnP (Universal Plug and Play) where the destination address is
++one of the standard multicast destination addresses for UPnP:
++
++  ufw allow to 239.255.255.250 app UPnP
++  ufw allow to ff02::f app UPnP
++
++Disallow incoming mDNS (Multicast DNS) where the destination address is one of
++the standard multicast destination addresses for mDNS (allowed by default):
++
++  ufw delete allow to 224.0.0.251 app mDNS
++  ufw delete allow to ff02::fb app mDNS
++
++(Unfortunately, it is not currently possible to store the destination addresses
++as part of the application definition.)
++
+ .SH LOGGING
+ .PP
+ \fBufw\fR supports multiple logging levels. \fBufw\fR defaults to a loglevel
+@@ -430,12 +450,19 @@
+ .SH NOTES
+ .PP
+ On installation, \fBufw\fR is 'enabled' (but only actually enabled on bootup if
+-\fBufw.service\fR is enabled in systemd) with a default incoming policy of deny
+-(except that the SSH application, i.e., port 22/tcp, is allowed by default),
++\fBufw.service\fR is enabled in systemd) with a default incoming policy of deny,
+ a default forward policy of deny, and a default outgoing policy of allow, with
+ stateful tracking for NEW connections for incoming and forwarded connections.
+-In addition to the above, a default ruleset is put in place that does the
+-following:
++As exceptions to the default deny policy, INPUT on the following application
++ports is allowed by default:
++.TP
++- SSH (port 22/tcp)
++.TP
++- mDNS (port 5353/udp with the multicast destination addresses 224.0.0.251 for IPv4 and ff02::fb for IPv6)
++.PP
++These rules can easily be removed through the \fBufw\fR command line or its
++graphical frontends. In addition to the above, a default ruleset is put in place
++that does the following:
+ .TP
+ - DROP packets with RH0 headers
+ .TP
+@@ -450,10 +477,6 @@
+ - ACCEPT DHCP client traffic (INPUT)
+ .TP
+ - DROP non-local traffic (INPUT)
+-.TP
+-- ACCEPT mDNS (zeroconf/bonjour/avahi 224.0.0.251 for IPv4 and ff02::fb for IPv6) for service discovery (INPUT)
+-.TP
+-- ACCEPT UPnP (239.255.255.250 for IPv4 and ff02::f for IPv6) for service discovery (INPUT)
+ 
+ .PP
+ Rule ordering is important and the first match wins. Therefore when adding
+diff -Nur ufw-0.34~rc-default-allow-ssh/profiles/fedora-multicast ufw-0.34~rc-multicast/profiles/fedora-multicast
+--- ufw-0.34~rc-default-allow-ssh/profiles/fedora-multicast	1970-01-01 01:00:00.000000000 +0100
++++ ufw-0.34~rc-multicast/profiles/fedora-multicast	2015-01-20 03:12:34.000000000 +0100
+@@ -0,0 +1,9 @@
++[mDNS]
++title=mDNS
++description=Multicast DNS (mDNS)
++ports=5353/udp
++
++[UPnP]
++title=UPnP
++description=Universal Plug and Play (UPnP)
++ports=1900/udp
+diff -Nur ufw-0.34~rc-default-allow-ssh/README ufw-0.34~rc-multicast/README
+--- ufw-0.34~rc-default-allow-ssh/README	2014-12-08 05:18:18.000000000 +0100
++++ ufw-0.34~rc-multicast/README	2015-01-24 18:18:39.000000000 +0100
+@@ -246,10 +246,6 @@
+     and echo-request
+ - ACCEPT certain icmpv6 packets for stateless autoconfiguration (INPUT):
+   neighbor-solicitation, neighbor-advertisement, router-solicitation
+-- ACCEPT mDNS (zeroconf/bonjour/avahi 224.0.0.251 for IPv4 and ff02::fb for
+-  IPv6) for service discovery (INPUT)
+-- ACCEPT UPnP (239.255.255.250 for IPv4 and ff02::f for IPv6) for service
+-  discovery (INPUT)
+ - ACCEPT ping replies from IPv6 link-local (ffe8::/10) addresses (INPUT)
+ - ACCEPT DHCP client traffic (INPUT)
+ - Log all blocked packets not matching the default policy with rate limiting
