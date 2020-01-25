@@ -1,0 +1,21 @@
+diff -up ufw-0.36.20200125/tests/check-requirements.7~ ufw-0.36.20200125/tests/check-requirements
+--- ufw-0.36.20200125/tests/check-requirements.7~	2020-01-26 00:19:52.416227146 +0100
++++ ufw-0.36.20200125/tests/check-requirements	2020-01-26 00:21:39.965228239 +0100
+@@ -50,7 +50,7 @@ runcmd() {
+ # check python
+ found_python="no"
+ echo -n "Has python: "
+-for exe in python2.7 python2.6 python2.5 python3.2 python3.3 python3.4 python3.5 python3.6 python3.7 python python3 ; do
++for exe in python2.7 python2.6 python2.5 python3.2 python3.3 python3.4 python3.5 python3.6 python3.7 python3.8 python3.9 python python3 ; do
+     if ! which $exe >/dev/null 2>&1; then
+         continue
+     fi
+@@ -59,7 +59,7 @@ for exe in python2.7 python2.6 python2.5
+         echo "pass (binary: $exe, version: $v, py2)"
+         found_python="yes"
+         break
+-    elif echo "$v" | grep -q "^3.[2-7]"; then
++    elif echo "$v" | grep -q "^3.[2-9]"; then
+         echo "pass (binary: $exe, version: $v, py3)"
+         found_python="yes"
+         break

@@ -1,10 +1,10 @@
 Summary:	Uncomplicated Firewall
 Name:		ufw
-Version:	0.35
-Release:	2
+Version:	0.36.20200125
+Release:	1
 License:	GPLv3
 URL:		https://launchpad.net/%{name}
-Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.gz
+Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
 # systemd service file
 Source1:	ufw.service
 # Install translations to the systemwide standard location for %%find_lang
@@ -28,8 +28,8 @@ Patch3:		ufw-0.34~rc-default-allow-ssh.patch
 Patch4:		ufw-0.34~rc-multicast.patch
 # Add protocol profiles for KDE Connect (#1257699) and Icecream (#1262009)
 Patch5:		ufw-0.34~rc-additional-profiles.patch
-# Fix check-requirements for Python 3.5, add 3.6, remove unsupported 3.2/3.3
-Patch6:		ufw-0.35-python36.patch
+# Fix check-requirements for Python 3.8, add 3.9, remove unsupported 3.2/3.3
+Patch6:		ufw-0.36-python38.patch
 # Change permissions of the *.rules files from 0640 to 0644
 # Change permissions of the before.init and after.init hooks from 0640 to 0755
 Patch7:		ufw-0.35-permissions.patch
@@ -50,21 +50,12 @@ Ufw provides a framework for managing netfilter as well as
 manipulating the firewall.
 
 %prep
-%setup -q
-%patch0 -p1 -b .trans-dir
-%patch1 -p1 -b .libexec-dir
-%patch2 -p1 -b .default-enabled
-%patch3 -p1 -b .default-allow-ssh
-%patch4 -p1 -b .multicast
-rm -f profiles/*.multicast
-%patch5 -p1 -b .additional-profiles
-rm -f profiles/*.additional-profiles
-%patch6 -p1 -b .python36
-%patch7 -p1 -b .permissions
-%patch8 -p1 -b .no-pointless-env
+%autosetup -p1
+find . -name "*.*~" |xargs rm -f
 
 %build
 %py_build
+make mo
 
 %install
 %py_install
@@ -76,6 +67,12 @@ cat > %{buildroot}%{_presetdir}/86-ufw.preset << EOF
 enable ufw.service
 EOF
 
+for i in locales/mo/*.mo; do
+	LCODE=`basename $i .mo`
+	mkdir -p %{buildroot}%{_datadir}/locale/$LCODE/LC_MESSAGES
+	cp $i %{buildroot}%{_datadir}/locale/$LCODE/LC_MESSAGES/ufw.mo
+done
+
 %find_lang %{name}
 
 %files -f %{name}.lang
@@ -83,7 +80,7 @@ EOF
 %doc ChangeLog README TODO AUTHORS
 %{_sbindir}/ufw
 %{_libexecdir}/ufw/
-%{python3_sitelib}/ufw-%{version}-py*.egg-info
+%{python3_sitelib}/ufw-*-py*.egg-info
 %{python3_sitelib}/ufw/
 %{_datadir}/ufw/
 %{_presetdir}/86-ufw.preset

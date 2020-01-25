@@ -1,7 +1,7 @@
-diff -ur ufw-0.35/setup.py ufw-0.35-trans-dir/setup.py
---- ufw-0.35/setup.py	2016-02-18 06:26:44.000000000 +0100
-+++ ufw-0.35-trans-dir/setup.py	2016-10-05 05:41:52.274818305 +0200
-@@ -62,6 +62,7 @@
+diff -up ufw-0.36.20200125/setup.py.trans-dir ufw-0.36.20200125/setup.py
+--- ufw-0.36.20200125/setup.py.trans-dir	2020-01-23 16:53:34.000000000 +0100
++++ ufw-0.36.20200125/setup.py	2020-01-25 23:53:28.236211046 +0100
+@@ -61,6 +61,7 @@ class Install(_install, object):
              real_statedir = self.home + real_statedir
              real_prefix = self.home + '/usr'
          real_sharedir = os.path.join(real_prefix, 'share', 'ufw')
@@ -9,7 +9,7 @@ diff -ur ufw-0.35/setup.py ufw-0.35-trans-dir/setup.py
  
          # Update the modules' paths
          for fn in [ 'common.py' ]:
-@@ -98,6 +99,11 @@
+@@ -97,6 +98,11 @@ class Install(_install, object):
                                   "s%#SHARE_DIR#%" + real_sharedir + "%g",
                                   f])
  
@@ -21,7 +21,7 @@ diff -ur ufw-0.35/setup.py ufw-0.35-trans-dir/setup.py
                  if fn == 'common.py' and 'UFW_SKIP_CHECKS' in os.environ and \
                     os.environ['UFW_SKIP_CHECKS'] != '':
                      print("Updating do_checks")
-@@ -144,14 +150,20 @@
+@@ -143,14 +149,20 @@ class Install(_install, object):
          self.copy_file('src/ufw-init-functions', init_helper_functions)
  
          # Install translations
@@ -47,10 +47,10 @@ diff -ur ufw-0.35/setup.py ufw-0.35-trans-dir/setup.py
  
          # Install configuration files
          confdir = real_confdir
-diff -ur ufw-0.35/src/common.py ufw-0.35-trans-dir/src/common.py
---- ufw-0.35/src/common.py	2016-02-18 06:26:44.000000000 +0100
-+++ ufw-0.35-trans-dir/src/common.py	2016-10-05 05:38:21.768710217 +0200
-@@ -23,7 +23,7 @@
+diff -up ufw-0.36.20200125/src/common.py.trans-dir ufw-0.36.20200125/src/common.py
+--- ufw-0.36.20200125/src/common.py.trans-dir	2020-01-23 16:53:34.000000000 +0100
++++ ufw-0.36.20200125/src/common.py	2020-01-25 23:53:28.236211046 +0100
+@@ -31,7 +31,7 @@ if False:
  programName = "ufw"
  state_dir = "#STATE_PREFIX#"
  share_dir = "#SHARE_DIR#"
@@ -59,23 +59,23 @@ diff -ur ufw-0.35/src/common.py ufw-0.35-trans-dir/src/common.py
  config_dir = "#CONFIG_PREFIX#"
  prefix_dir = "#PREFIX#"
  iptables_dir = "#IPTABLES_DIR#"
-diff -ur ufw-0.35/src/ufw ufw-0.35-trans-dir/src/ufw
---- ufw-0.35/src/ufw	2016-02-18 06:26:44.000000000 +0100
-+++ ufw-0.35-trans-dir/src/ufw	2016-10-06 02:33:22.572376754 +0200
-@@ -58,8 +58,7 @@
+diff -up ufw-0.36.20200125/src/ufw.trans-dir ufw-0.36.20200125/src/ufw
+--- ufw-0.36.20200125/src/ufw.trans-dir	2020-01-25 23:53:28.236211046 +0100
++++ ufw-0.36.20200125/src/ufw	2020-01-25 23:54:29.611211670 +0100
+@@ -58,8 +58,7 @@ for i in sys.argv:
+         args.append(i)
  
  # Internationalization
- gettext.bindtextdomain(ufw.common.programName, \
--                       os.path.join(_findpath(ufw.common.trans_dir, rootdir),
--                                    'messages'))
-+                       _findpath(ufw.common.trans_dir, rootdir))
- gettext.textdomain(ufw.common.programName)
+-gettext.bindtextdomain(domain, os.path.join(_findpath(ufw.common.trans_dir,
+-                                                      rootdir), 'messages'))
++gettext.bindtextdomain(domain, _findpath(ufw.common.trans_dir, rootdir))
  try:
      # BAW: I'm not sure why both this and the .install() above is here, but
-diff -ur ufw-0.35/tests/unit/support.py ufw-0.35-trans-dir/tests/unit/support.py
---- ufw-0.35/tests/unit/support.py	2016-02-18 06:26:44.000000000 +0100
-+++ ufw-0.35-trans-dir/tests/unit/support.py	2016-10-05 05:38:21.768710217 +0200
-@@ -71,7 +71,8 @@
+     # let's roll with it for now.  This is the Python 2 version, which ensures
+diff -up ufw-0.36.20200125/tests/unit/support.py.trans-dir ufw-0.36.20200125/tests/unit/support.py
+--- ufw-0.36.20200125/tests/unit/support.py.trans-dir	2020-01-23 16:53:34.000000000 +0100
++++ ufw-0.36.20200125/tests/unit/support.py	2020-01-25 23:53:28.236211046 +0100
+@@ -72,7 +72,8 @@ def initvars(install_dir):
                              os.path.realpath(topdir), "ufw/lib/ufw")
      ufw.common.share_dir = os.path.join(
                              os.path.realpath(topdir), "ufw/usr/share/ufw")
