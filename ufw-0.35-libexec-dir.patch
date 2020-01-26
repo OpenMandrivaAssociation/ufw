@@ -216,11 +216,11 @@ diff -up ufw-0.36.20200125/src/backend_iptables.py.2~ ufw-0.36.20200125/src/back
          config_dir = _findpath(ufw.common.config_dir, datadir)
  
 -        files['rules'] = os.path.join(config_dir, 'ufw/user.rules')
-+        files['rules'] = os.path.join(state_dir, 'user.rules')
++        files['rules'] = os.path.join(ufw.common.state_dir, 'user.rules')
          files['before_rules'] = os.path.join(config_dir, 'ufw/before.rules')
          files['after_rules'] = os.path.join(config_dir, 'ufw/after.rules')
 -        files['rules6'] = os.path.join(config_dir, 'ufw/user6.rules')
-+        files['rules6'] = os.path.join(state_dir, 'user6.rules')
++        files['rules6'] = os.path.join(ufw.common.state_dir, 'user6.rules')
          files['before6_rules'] = os.path.join(config_dir, 'ufw/before6.rules')
          files['after6_rules'] = os.path.join(config_dir, 'ufw/after6.rules')
          # when rootdir/datadir are not set, ufw-init is in the same area as
