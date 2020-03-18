@@ -1,7 +1,7 @@
 Summary:	Uncomplicated Firewall
 Name:		ufw
 Version:	0.36.20200125
-Release:	2
+Release:	3
 License:	GPLv3
 URL:		https://launchpad.net/%{name}
 Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
@@ -68,7 +68,7 @@ enable ufw.service
 EOF
 
 for i in locales/mo/*.mo; do
-	LCODE=`basename $i .mo`
+	LCODE=$(basename $i .mo)
 	mkdir -p %{buildroot}%{_datadir}/locale/$LCODE/LC_MESSAGES
 	cp $i %{buildroot}%{_datadir}/locale/$LCODE/LC_MESSAGES/ufw.mo
 done
