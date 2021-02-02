@@ -1,7 +1,7 @@
 Summary:	Uncomplicated Firewall
 Name:		ufw
 Version:	0.36.20200125
-Release:	3
+Release:	4
 License:	GPLv3
 URL:		https://launchpad.net/%{name}
 Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
@@ -74,6 +74,15 @@ for i in locales/mo/*.mo; do
 done
 
 %find_lang %{name}
+
+%preun
+%systemd_preun ufw.service
+
+%post
+%systemd_post ufw.service
+
+%postun
+%systemd_postun_with_restart ufw.service
 
 %files -f %{name}.lang
 %license COPYING
