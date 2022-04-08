@@ -1,7 +1,7 @@
 Summary:	Uncomplicated Firewall
 Name:		ufw
 Version:	0.36.20200125
-Release:	4
+Release:	5
 License:	GPLv3
 URL:		https://launchpad.net/%{name}
 Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
