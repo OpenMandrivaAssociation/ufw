@@ -1,7 +1,7 @@
 Summary:	Uncomplicated Firewall
 Name:		ufw
 Version:	0.36.20200125
-Release:	5
+Release:	6
 License:	GPLv3
 URL:		https://launchpad.net/%{name}
 Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
@@ -40,7 +40,7 @@ BuildArch:	noarch
 #BuildRequires:	pkgconfig(python)
 BuildRequires:	iptables
 BuildRequires:	gettext
-BuildRequires:	systemd-macros
+BuildRequires:	systemd-rpm-macros
 Requires:	iptables
 
 %description
