@@ -1,10 +1,10 @@
 Summary:	Uncomplicated Firewall
 Name:		ufw
-Version:	0.36.20200125
-Release:	6
+Version:	0.36.2
+Release:	1
 License:	GPLv3
 URL:		https://launchpad.net/%{name}
-Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
+Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.gz
 # systemd service file
 Source1:	ufw.service
 # Install translations to the systemwide standard location for %%find_lang
