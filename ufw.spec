@@ -38,6 +38,7 @@ Patch8:		ufw-0.35-no-pointless-env.patch
 
 BuildArch:	noarch
 #BuildRequires:	pkgconfig(python)
+BuildRequires:	make
 BuildRequires:	iptables
 BuildRequires:	gettext
 BuildRequires:	systemd-rpm-macros
