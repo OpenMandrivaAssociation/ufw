@@ -3,6 +3,7 @@ Name:		ufw
 Version:	0.36.20200125
 Release:	7
 License:	GPLv3
+Group:		Networking
 URL:		https://launchpad.net/%{name}
 Source0:	https://launchpad.net/%{name}/%{version}/%{version}/+download/ufw-%{version}.tar.zst
 # systemd service file
@@ -35,9 +36,12 @@ Patch6:		ufw-0.36-python38.patch
 Patch7:		ufw-0.35-permissions.patch
 # Don't prepend /usr/bin/env to sys.executable, which is always an absolute path
 Patch8:		ufw-0.35-no-pointless-env.patch
+# Switch to Python setuptools because Python 3.12 removed deprecated distutils
+Patch9:		ufw-0.35-distutils-setuptools.patch
 
 BuildArch:	noarch
-#BuildRequires:	pkgconfig(python)
+BuildRequires:	pkgconfig(python)
+BuildRequires:	python%{pyver}dist(setuptools)
 BuildRequires:	make
 BuildRequires:	iptables
 BuildRequires:	gettext
@@ -53,6 +57,8 @@ manipulating the firewall.
 %prep
 %autosetup -p1
 find . -name "*.*~" |xargs rm -f
+# Unify /usr/bin and /usr/sbin
+sed -e "s/'sbin'/'bin'/" -i setup.py
 
 %build
 %py_build
@@ -110,8 +116,8 @@ done
 %config(noreplace) %{_sysconfdir}/ufw/applications.d/fedora-*
 %config(noreplace) %{_sysconfdir}/default/ufw
 # state files under /var, not directly user-editable, but should survive updates
-%dir %{_sharedstatedir}/ufw/
-%config(noreplace) %{_sharedstatedir}/ufw/user.rules
-%config(noreplace) %{_sharedstatedir}/ufw/user6.rules
+%dir %{_localstatedir}/lib/ufw/
+%config(noreplace) %{_localstatedir}/lib/ufw/user.rules
+%config(noreplace) %{_localstatedir}/lib/ufw/user6.rules
 %{_mandir}/man8/ufw-framework.8*
 %{_mandir}/man8/ufw.8*

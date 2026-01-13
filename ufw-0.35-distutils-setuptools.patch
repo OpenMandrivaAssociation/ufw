@@ -1,0 +1,13 @@
+--- ufw-0.35/setup.py				2016-02-18 06:26:44.000000000 +0100
++++ ufw-0.35/setup.py.distutils-setuptools	2023-06-15 23:17:13.651168188 +0200
+@@ -26,8 +26,8 @@
+ #
+ 
+ from __future__ import print_function
+-from distutils.command.install import install as _install
+-from distutils.core import setup
++from setuptools.command.install import install as _install
++from setuptools import setup
+ import errno
+ import os
+ import re
